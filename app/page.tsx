@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import Image from "next/image";
 
 type Plant = {
   district: string;
@@ -32,7 +33,7 @@ export default function Home() {
     },
   ];
 
-  // Scroll Spy Effect
+  // Scroll Spy
   useEffect(() => {
     const sections = document.querySelectorAll("section");
 
@@ -48,7 +49,6 @@ export default function Home() {
     );
 
     sections.forEach((section) => observer.observe(section));
-
     return () => observer.disconnect();
   }, []);
 
@@ -62,7 +62,7 @@ export default function Home() {
     <a
       href={`#${id}`}
       onClick={() => setMenuOpen(false)}
-      className={`relative cursor-pointer pb-1 transition duration-300 ${
+      className={`relative pb-1 transition duration-300 ${
         activeSection === id ? "text-yellow-400" : "text-white"
       }`}
     >
@@ -86,7 +86,6 @@ export default function Home() {
             IKS Digital Repository
           </h1>
 
-          {/* Desktop Menu */}
           <div className="hidden md:flex space-x-8 text-sm font-medium">
             {navItem("home", "Home")}
             {navItem("about", "About")}
@@ -94,16 +93,14 @@ export default function Home() {
             {navItem("contact", "Contact")}
           </div>
 
-          {/* Mobile Menu Button */}
           <button
-            className="md:hidden text-white"
+            className="md:hidden"
             onClick={() => setMenuOpen(!menuOpen)}
           >
             ☰
           </button>
         </div>
 
-        {/* Mobile Menu */}
         {menuOpen && (
           <div className="md:hidden bg-green-900 px-6 pb-4 space-y-3">
             {navItem("home", "Home")}
@@ -114,31 +111,27 @@ export default function Home() {
         )}
       </nav>
 
-      <div className="h-20"></div>
-
-      {/* ================= HERO SECTION ================= */}
+         {/* ================= HERO SECTION ================= */}
       <section
         id="home"
-        className="relative h-[90vh] flex items-center justify-center text-center text-white"
+        className="relative h-screen flex items-center justify-center text-center text-white overflow-hidden"
       >
-        {/* Background Image */}
-        <div
-          className="absolute inset-0 bg-cover bg-center"
-          style={{
-            backgroundImage:
-              "url('/public/hero-plant.jpg')",
-          }}
-        ></div>
+        <Image
+          src="/hero-plant.jpg"
+          alt="Hero Background"
+          fill
+          priority
+          className="object-cover object-center"
+        />
 
-        {/* Dark Overlay */}
-        <div className="absolute inset-0 bg-black bg-opacity-60"></div>
+        <div className="absolute inset-0 bg-black/50"></div>
 
-        {/* Content */}
-        <div className="relative z-10 px-6">
-          <h2 className="text-4xl md:text-6xl font-bold leading-tight">
+        <div className="relative z-10 max-w-4xl px-6">
+          <h2 className="text-4xl md:text-6xl font-bold leading-tight drop-shadow-lg">
             Indian Knowledge Systems
           </h2>
-          <p className="mt-6 max-w-3xl mx-auto text-lg text-gray-200">
+
+          <p className="mt-6 text-lg md:text-xl text-gray-200 drop-shadow-md">
             Digital Repository for Documentation of Ethno-medicinal Plants
             Used by Tribal Communities of Eastern Odisha
           </p>
@@ -166,7 +159,6 @@ export default function Home() {
             Ethno-Medicinal Plant Database
           </h2>
 
-          {/* Search Card */}
           <div className="bg-white rounded-3xl shadow-2xl p-8 mb-10 border border-green-200">
             <input
               type="text"
@@ -177,7 +169,6 @@ export default function Home() {
             />
           </div>
 
-          {/* Table */}
           <div className="overflow-x-auto rounded-2xl shadow-2xl">
             <table className="min-w-full text-sm">
               <thead className="bg-green-900 text-white uppercase">
