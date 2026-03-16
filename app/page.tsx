@@ -11,8 +11,6 @@ type Plant = {
   photo: string;
 };
 
-// Full dataset extracted from IKS.xlsx
-// Photos are fetched from Wikimedia Commons using plant scientific names
 const PLANT_DATA: Plant[] = [
   { vendorNo: "IKS-Trident-001", plantName: "Aegle marmelos", family: "Rutaceae", ethnobotanicalUse: "Leaves used for treatment of diabetes, diarrhea, dysentery, constipation, and respiratory disorders. Fruits used for digestive disorders.", photo: "https://upload.wikimedia.org/wikipedia/commons/thumb/3/3f/Bael_Aegle_marmelos_fruit.jpg/320px-Bael_Aegle_marmelos_fruit.jpg" },
   { vendorNo: "IKS-Trident-002", plantName: "Aloe vera", family: "Asphodelaceae", ethnobotanicalUse: "Gel used for skin burns, wound healing, moisturizing, and anti-inflammatory purposes. Also used for digestive health.", photo: "https://upload.wikimedia.org/wikipedia/commons/thumb/4/4b/Aloe_vera_flower_inset.png/320px-Aloe_vera_flower_inset.png" },
@@ -252,8 +250,8 @@ export default function Home() {
           </div>
           <div className="grid md:grid-cols-2 gap-12 items-center">
             <div className="space-y-6 text-justify hyphens-auto text-gray-700 leading-relaxed text-lg">
-              <p>The Indian Knowledge Systems (IKS) are a well-organized and scientifically valid body of knowledge developed over centuries through practice and observation. Documentation and digital preservation are essential to safeguard this indigenous heritage.</p>
-              <p>The IKS sanctioned project titled <span className="font-semibold text-green-900">&ldquo;Development of Digital Repository for Documentation of Ethno-medicinal Plants Used by Different Tribal Communities of Eastern Odisha for Holistic Healthcare Management&rdquo;</span> led by <strong>Dr. Manisha Mohapatra</strong>, demonstrates a translational approach to empirical knowledge-driven health research.</p>
+              <p>The Indian Knowledge Systems (IKS) are a well-organized and scientifically valid body of knowledge developed over the centuries through practice and observation. It is imperative to give prime importance to the documentation and digital preservation of the IKS. This will ensure the preservation of the indigenous intellectual heritage for the coming generations. The enhancement of the IKS in the empirical knowledge systems will make it more relevant to the present-day challenges faced by society.</p>
+              <p>The IKS sanctioned project, <span className="font-semibold text-green-900">&ldquo;Development of Digital Repository for Documentation of Ethno-medicinal Plants Used by Different Tribal Communities of Eastern Odisha for Holistic Healthcare Management,&rdquo;</span> led by <strong>Dr. Manisha Mohapatra</strong>, is one of the examples of the efforts put forth to demonstrate the translational approach for empirical knowledge-driven health assessments in tribal communities of eastern Odisha.</p>
             </div>
             <div className="relative">
               <div className="absolute -top-3 -left-3 w-full h-full border-4 border-yellow-500 rounded-2xl pointer-events-none" />
@@ -270,8 +268,9 @@ export default function Home() {
               </div>
             </div>
             <div className="space-y-6 text-justify hyphens-auto text-gray-700 leading-relaxed text-lg order-1 md:order-2">
-              <p>Ethnomedicinal systems in Eastern Odisha demonstrate deep understanding of biodiversity, plant identification, preparation methods, and dosage standards. However, much of this knowledge is orally transmitted and vulnerable to socio-economic and environmental change.</p>
-              <p>Through systematic documentation, plant authentication, and digital archiving, this platform ensures long-term preservation and promotes interdisciplinary research, biodiversity conservation, and sustainable healthcare practices with ethical governance.</p>
+              <p>In the tribal scenario of eastern Odisha, the ethnomedicinal systems have shown a deep understanding of biodiversity, plant identification, preparation methods, dosage standards, and their usage. However, due to the largely oral and embedded nature of such knowledge in the cultural practices of the communities, it is susceptible to deterioration due to socio-economic changes, environmental changes, and the loss of continuity.</p>
+              <p>In light of the urgent need to document and preserve such knowledge, an attempt is being made to document and digitize the knowledge in a way that preserves it while maintaining its authenticity and integrity. Ethnographic documentation, authentication of plant species, and documentation of preparation techniques, applications, and traditional stories associated with them are being done systematically. The digital platform is being developed to allow for searching, metadata integration, and long-term preservation in conformity with established data management practices.</p>
+              <p>Through the conversion of tacit indigenous knowledge into a scientifically organized digital platform, this project is enhancing knowledge continuity, facilitating inter-disciplinary research, and informing decision-making on biodiversity conservation and sustainable healthcare practices. Simultaneously, ethical considerations including intellectual property protection and equitable benefit-sharing are being incorporated to ensure responsible and community-sensitive knowledge governance.</p>
             </div>
           </div>
         </div>
