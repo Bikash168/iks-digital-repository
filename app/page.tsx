@@ -138,9 +138,9 @@ export default function Home() {
               <Image
                 src="/logo2.png"
                 alt="IKS Logo"
-                width={120}
-                height={120}
-                style={{ width: "120px", height: "120px", objectFit: "contain" }}
+                width={110}
+                height={110}
+                style={{ width: "110px", height: "110px", objectFit: "contain" }}
               />
               <Image
                 src="/logo3.svg"
