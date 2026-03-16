@@ -131,9 +131,9 @@ export default function Home() {
               <Image
                 src="/logo1.png"
                 alt="TACT Logo"
-                width={110}
-                height={110}
-                style={{ width: "110px", height: "110px", objectFit: "contain" }}
+                width={90}
+                height={90}
+                style={{ width: "90px", height: "90px", objectFit: "contain" }}
               />
               <Image
                 src="/logo2.png"
@@ -381,23 +381,44 @@ export default function Home() {
       </section>
 
       {/* CONTACT */}
-      <section id="contact" className="py-24 px-6 md:px-16 bg-green-50">
+         <section id="contact" className="py-24 px-6 md:px-16 bg-green-50">
         <div className="max-w-6xl mx-auto">
           <div className="text-center mb-12">
             <h2 className="text-4xl font-bold text-green-900">Contact Us</h2>
             <div className="w-24 h-1 bg-yellow-500 mx-auto mt-4 rounded-full" />
           </div>
-          <div className="bg-white shadow-xl rounded-3xl p-8 md:p-10 border border-green-200">
-            <h3 className="text-xl font-semibold text-green-800 mb-3">For Any Query</h3>
-            <p className="text-gray-700 leading-relaxed">
-              Dr. Manisha Mohapatra<br />
-              Project PI, Biotechnology Department<br />
-              Trident Academy of Creative Technology<br />
-              Infocity, Bhubaneswar&#8209;751024, India
-            </p>
-            <a href="mailto:manisha@trident.ac.in" className="inline-block mt-5 px-7 py-2.5 bg-green-900 text-white rounded-xl hover:bg-green-700 active:scale-95 transition-all text-sm font-medium">
-              Send Email
-            </a>
+          <div className="grid md:grid-cols-2 gap-6">
+            {/* Contact 1 */}
+            <div className="bg-white shadow-xl rounded-3xl p-8 border border-green-200 flex flex-col justify-between">
+              <div>
+                <span className="inline-block mb-3 px-3 py-1 bg-green-100 text-green-800 text-xs font-semibold rounded-full uppercase tracking-wide">For Any Query</span>
+                <h3 className="text-xl font-bold text-green-900 mb-1">Dr. Manisha Mohapatra</h3>
+                <p className="text-gray-600 text-sm leading-relaxed">
+                  Project PI, Biotechnology Department<br />
+                  Trident Academy of Creative Technology<br />
+                  Infocity, Bhubaneswar&#8209;751024, India
+                </p>
+              </div>
+              <a href="mailto:manishamohapatra7@gmail.com" className="inline-block mt-6 px-6 py-2.5 bg-green-900 text-white rounded-xl hover:bg-green-700 active:scale-95 transition-all text-sm font-medium w-fit">
+                Send Email
+              </a>
+            </div>
+
+            {/* Contact 2 */}
+            <div className="bg-white shadow-xl rounded-3xl p-8 border border-green-200 flex flex-col justify-between">
+              <div>
+                <span className="inline-block mb-3 px-3 py-1 bg-yellow-100 text-yellow-800 text-xs font-semibold rounded-full uppercase tracking-wide">For Technical Support</span>
+                <h3 className="text-xl font-bold text-green-900 mb-1">Sumanta Sahoo</h3>
+                <p className="text-gray-600 text-sm leading-relaxed">
+                  DGM&#8209;Technical<br />
+                  Trident Academy of Creative Technology<br />
+                  Infocity, Bhubaneswar&#8209;751024, India
+                </p>
+              </div>
+              <a href="mailto:sumanta@trident.ac.in" className="inline-block mt-6 px-6 py-2.5 bg-green-900 text-white rounded-xl hover:bg-green-700 active:scale-95 transition-all text-sm font-medium w-fit">
+                Send Email
+              </a>
+            </div>
           </div>
         </div>
       </section>
