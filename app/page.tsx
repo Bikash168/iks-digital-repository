@@ -8,7 +8,7 @@ type Plant = {
   plantName: string;
   family: string;
   ethnobotanicalUse: string;
-  photo: string; // Wikimedia/public domain image URL via plant name
+  photo: string;
 };
 
 // Full dataset extracted from IKS.xlsx
@@ -44,7 +44,8 @@ const PLANT_DATA: Plant[] = [
   { vendorNo: "IKS-Trident-028", plantName: "Zingiber officinale", family: "Zingiberaceae", ethnobotanicalUse: "Rhizome used for nausea, digestive disorders, cold, cough, inflammation, and as an antimicrobial and analgesic agent.", photo: "https://upload.wikimedia.org/wikipedia/commons/thumb/1/1e/Zingiber_officinale_MS_4158.jpg/320px-Zingiber_officinale_MS_4158.jpg" },
 ];
 
-const NAVBAR_HEIGHT = 72;
+// FIX 1: Single declaration of NAVBAR_HEIGHT as a number (used for scroll offset calculations)
+const NAVBAR_HEIGHT = 130;
 const NAV_SECTIONS = ["home", "about", "project", "database", "contact"] as const;
 
 export default function Home() {
@@ -97,39 +98,89 @@ export default function Home() {
       item.ethnobotanicalUse.toLowerCase().includes(search.toLowerCase())
   );
 
+  // FIX 2: navItem helper restored — used for active-link underline highlighting
   const navItem = (id: string, label: string) => (
     <a
       key={id}
       href={`#${id}`}
       onClick={(e) => handleNavClick(e, id)}
-      className={`relative pb-1 transition duration-300 ${activeSection === id ? "text-yellow-400" : "text-white hover:text-yellow-200"
-        }`}
+      className={`relative pb-1 transition duration-300 ${
+        activeSection === id ? "text-green-600" : "text-green-800 hover:text-green-600"
+      }`}
     >
       {label}
-      <span className={`absolute left-0 -bottom-1 h-[2px] bg-yellow-400 transition-all duration-300 ${activeSection === id ? "w-full" : "w-0"}`} />
+      <span
+        className={`absolute left-0 -bottom-1 h-[2px] bg-green-600 transition-all duration-300 ${
+          activeSection === id ? "w-full" : "w-0"
+        }`}
+      />
     </a>
   );
 
   return (
     <main className="font-serif bg-[#f8f6f1]">
 
-      {/* NAVBAR */}
-      <nav className="fixed top-0 w-full bg-green-950/95 backdrop-blur-md text-white shadow-lg z-50" style={{ height: NAVBAR_HEIGHT }}>
-        <div className="max-w-7xl mx-auto flex justify-between items-center px-6 h-full">
-          <h1 className="text-lg md:text-xl font-bold text-yellow-400 tracking-wide">IKS Digital Repository</h1>
-          <div className="hidden md:flex space-x-8 text-sm font-medium">
+      {/* NAVBAR — FIX 3: removed stray `const` declarations that were placed inside JSX */}
+      <nav
+        className="fixed top-0 w-full bg-white shadow-md z-50 border-b"
+        style={{ height: `${NAVBAR_HEIGHT}px` }}
+      >
+        <div className="max-w-7xl mx-auto flex justify-between items-center px-8 h-full">
+
+          {/* Logos + Title */}
+          <div className="flex items-center gap-6">
+            <div className="flex items-center gap-5 border-r border-gray-300 pr-6">
+              <Image
+                src="/logo1.png"
+                alt="TACT Logo"
+                width={110}
+                height={110}
+                style={{ width: "110px", height: "110px", objectFit: "contain" }}
+              />
+              <Image
+                src="/logo2.png"
+                alt="IKS Logo"
+                width={120}
+                height={120}
+                style={{ width: "120px", height: "120px", objectFit: "contain" }}
+              />
+              <Image
+                src="/logo3.svg"
+                alt="Government Logo"
+                width={120}
+                height={120}
+                style={{ width: "120px", height: "120px", objectFit: "contain" }}
+              />
+            </div>
+            <h1 className="text-xl font-bold text-green-800 tracking-wide">
+              IKS Digital Repository
+            </h1>
+          </div>
+
+          {/* Desktop Menu — FIX 4: uses navItem() helper for active highlighting */}
+          <div className="hidden md:flex items-center space-x-10 text-[16px] font-semibold">
             {navItem("home", "Home")}
             {navItem("about", "About")}
             {navItem("project", "Project")}
             {navItem("database", "Database")}
             {navItem("contact", "Contact")}
           </div>
-          <button className="md:hidden text-2xl leading-none" aria-label="Toggle menu" onClick={() => setMenuOpen((prev) => !prev)}>
-            {menuOpen ? "✕" : "☰"}
+
+          {/* Mobile Hamburger — FIX 5: wired up to menuOpen state */}
+          <button
+            className="md:hidden flex flex-col gap-1.5 p-2"
+            onClick={() => setMenuOpen((prev) => !prev)}
+            aria-label="Toggle menu"
+          >
+            <span className={`block w-6 h-0.5 bg-green-800 transition-all ${menuOpen ? "rotate-45 translate-y-2" : ""}`} />
+            <span className={`block w-6 h-0.5 bg-green-800 transition-all ${menuOpen ? "opacity-0" : ""}`} />
+            <span className={`block w-6 h-0.5 bg-green-800 transition-all ${menuOpen ? "-rotate-45 -translate-y-2" : ""}`} />
           </button>
         </div>
+
+        {/* Mobile Dropdown Menu */}
         {menuOpen && (
-          <div className="absolute top-full left-0 w-full md:hidden bg-green-900/98 px-6 pb-6 pt-4 flex flex-col gap-5 text-base font-medium shadow-xl">
+          <div className="md:hidden bg-white border-t border-green-100 shadow-lg px-8 py-4 flex flex-col gap-4 text-[15px] font-semibold">
             {navItem("home", "Home")}
             {navItem("about", "About")}
             {navItem("project", "Project")}
@@ -140,14 +191,54 @@ export default function Home() {
       </nav>
 
       {/* HERO */}
-      <section id="home" className="relative h-screen flex items-center justify-center text-center text-white overflow-hidden">
-        <Image src="/hero-plant.jpg" alt="Hero Background" fill priority className="object-cover object-center" />
-        <div className="absolute inset-0 bg-black/50" />
-        <div className="relative z-10 max-w-4xl px-6">
-          <h2 className="text-4xl md:text-6xl font-bold leading-tight drop-shadow-lg">Indian Knowledge Systems</h2>
-          <p className="mt-6 text-lg md:text-xl text-gray-200 drop-shadow-md">
-            Digital Repository for Documentation of Ethno-medicinal Plants Used by Tribal Communities of Eastern Odisha
-          </p>
+      <section
+        id="home"
+        className="relative flex items-center overflow-hidden text-white"
+        style={{
+          minHeight: "100vh",
+          paddingTop: `${NAVBAR_HEIGHT}px`,
+          background: "linear-gradient(135deg, #14532d 0%, #166534 40%, #15803d 70%, #16a34a 100%)",
+        }}
+      >
+        {/* Subtle dot texture */}
+        <div
+          className="absolute inset-0 opacity-10 pointer-events-none"
+          style={{
+            backgroundImage: "radial-gradient(circle at 2px 2px, white 1px, transparent 0)",
+            backgroundSize: "40px 40px",
+          }}
+        />
+
+        <div className="relative z-10 max-w-7xl mx-auto px-8 w-full flex flex-col md:flex-row items-center justify-between gap-12 py-16">
+
+          {/* Left — Text */}
+          <div className="flex-1 text-left max-w-xl">
+            <p className="text-yellow-300 uppercase tracking-[0.25em] text-xs font-semibold mb-4">
+              IKS Division · Ministry of Education · Govt. of India
+            </p>
+            <h2 className="text-4xl md:text-5xl font-bold leading-tight mb-4">
+              Indian Knowledge Systems
+            </h2>
+            <div className="w-16 h-1 bg-yellow-400 mb-6 rounded-full" />
+            <p className="text-base md:text-lg text-green-100 leading-relaxed">
+              Digital Repository for Documentation of Ethno-medicinal Plants Used by Tribal Communities of Eastern Odisha
+            </p>
+          </div>
+
+          {/* Right — Diagram on white card */}
+          <div className="flex-1 flex justify-center md:justify-end">
+            <div className="bg-white rounded-3xl shadow-2xl p-5 w-full max-w-lg">
+              <Image
+                src="/hero-plant.png"
+                alt="IKS System Diagram"
+                width={600}
+                height={450}
+                priority
+                style={{ width: "100%", height: "auto", objectFit: "contain" }}
+              />
+            </div>
+          </div>
+
         </div>
       </section>
 
@@ -255,7 +346,6 @@ export default function Home() {
                   ) : (
                     filteredData.map((item) => (
                       <tr key={item.vendorNo} className="hover:bg-green-50 transition-colors">
-                        {/* Plant Photo */}
                         <td className="px-4 py-3">
                           <div className="w-20 h-16 rounded-lg overflow-hidden bg-green-100 flex items-center justify-center flex-shrink-0">
                             {imgErrors[item.vendorNo] ? (
