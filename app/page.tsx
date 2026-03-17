@@ -50,7 +50,7 @@ export default function Home() {
         const workbook = XLSX.read(arrayBuffer, { type: "array" });
         const worksheet = workbook.Sheets[workbook.SheetNames[0]];
         const jsonData = XLSX.utils.sheet_to_json(worksheet);
-        
+
         console.log("Excel raw data (first row):", jsonData[0]); // Debug: log all columns
         const plants: Plant[] = jsonData.map((row: any) => ({
           vendorNo: row["Voucher No."] || row["VoucherNo"] || row["voucher_no"] || row["Voucher#"] || row["voucher"] || row["Voucher No"] || "",
@@ -59,7 +59,7 @@ export default function Home() {
           ethnobotanicalUse: row["Therapeutic Use"] || row["TherapeuticUse"] || row["Use"] || row["use"] || row["Ethnobotanical Use"] || "",
           photo: row["Photo"] || row["photo"] || row["Image"] || row["image"] || "/placeholder.jpg",
         }));
-        
+
         console.log("✅ Loaded plants:", plants.length);
         console.log("First plant vendorNo:", plants[0]?.vendorNo);
         console.log("Sample plant:", plants[0]);
@@ -104,15 +104,15 @@ export default function Home() {
     (item) =>
       (selectedFamily === 'all' || item.family.toLowerCase() === selectedFamily.toLowerCase()) &&
       (item.plantName.toLowerCase().includes(search.toLowerCase()) ||
-      item.family.toLowerCase().includes(search.toLowerCase()) ||
-      item.vendorNo.toLowerCase().includes(search.toLowerCase()) ||
-      item.ethnobotanicalUse.toLowerCase().includes(search.toLowerCase()))
+        item.family.toLowerCase().includes(search.toLowerCase()) ||
+        item.vendorNo.toLowerCase().includes(search.toLowerCase()) ||
+        item.ethnobotanicalUse.toLowerCase().includes(search.toLowerCase()))
   );
 
   // Sort filtered data
   const sortedData = [...filteredData].sort((a, b) => {
     let aValue: string, bValue: string;
-    
+
     switch (sortBy) {
       case 'name':
         aValue = a.plantName.toLowerCase();
@@ -129,7 +129,7 @@ export default function Home() {
       default:
         return 0;
     }
-    
+
     if (sortOrder === 'asc') {
       return aValue.localeCompare(bValue);
     } else {
@@ -160,12 +160,12 @@ export default function Home() {
       'Family': item.family,
       'Therapeutic Use': item.ethnobotanicalUse
     }));
-    
+
     const csvString = [
       Object.keys(csvData[0]).join(','),
       ...csvData.map(row => Object.values(row).map(val => `"${val}"`).join(','))
     ].join('\n');
-    
+
     const blob = new Blob([csvString], { type: 'text/csv' });
     const url = window.URL.createObjectURL(blob);
     const a = document.createElement('a');
@@ -181,15 +181,13 @@ export default function Home() {
       key={id}
       href={`#${id}`}
       onClick={(e) => handleNavClick(e, id)}
-      className={`relative pb-1 transition duration-300 ${
-        activeSection === id ? "text-green-600" : "text-green-800 hover:text-green-600"
-      }`}
+      className={`relative pb-1 transition duration-300 ${activeSection === id ? "text-green-600" : "text-green-800 hover:text-green-600"
+        }`}
     >
       {label}
       <span
-        className={`absolute left-0 -bottom-1 h-[2px] bg-green-600 transition-all duration-300 ${
-          activeSection === id ? "w-full" : "w-0"
-        }`}
+        className={`absolute left-0 -bottom-1 h-[2px] bg-green-600 transition-all duration-300 ${activeSection === id ? "w-full" : "w-0"
+          }`}
       />
     </a>
   );
@@ -569,80 +567,79 @@ export default function Home() {
               ))}
             </div>
           </div>
-<div className="flex justify-center mt-6 gap-2 flex-wrap">
-  {Array.from({ length: totalPages }, (_, i) => (
-    <button
-      key={i}
-      onClick={() => setCurrentPage(i + 1)}
-      className={`px-2 md:px-3 py-1 rounded text-xs md:text-sm font-medium transition-all ${
-        currentPage === i + 1
-          ? "bg-green-800 text-white"
-          : "bg-gray-200 hover:bg-gray-300 text-gray-800"
-      }`}
-    >
-      {i + 1}
-    </button>
-  ))}
-</div>
+          <div className="flex justify-center mt-6 gap-2 flex-wrap">
+            {Array.from({ length: totalPages }, (_, i) => (
+              <button
+                key={i}
+                onClick={() => setCurrentPage(i + 1)}
+                className={`px-2 md:px-3 py-1 rounded text-xs md:text-sm font-medium transition-all ${currentPage === i + 1
+                    ? "bg-green-800 text-white"
+                    : "bg-gray-200 hover:bg-gray-300 text-gray-800"
+                  }`}
+              >
+                {i + 1}
+              </button>
+            ))}
+          </div>
           <p className="text-right text-xs text-gray-400 mt-3">
             Showing {filteredCount} of {totalPlants} records
           </p>
         </div>
       </section>
       {selectedPlant && (
-  <div className="fixed inset-0 bg-black/50 flex items-end md:items-center justify-center z-50 p-4">
-    <div className="bg-white rounded-t-3xl md:rounded-2xl p-6 md:p-8 max-w-2xl w-full shadow-2xl relative max-h-[90vh] md:max-h-none overflow-y-auto">
+        <div className="fixed inset-0 bg-black/50 flex items-end md:items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-t-3xl md:rounded-2xl p-6 md:p-8 max-w-2xl w-full shadow-2xl relative max-h-[90vh] md:max-h-none overflow-y-auto">
 
-      <button
-        onClick={() => setSelectedPlant(null)}
-        className="absolute top-4 right-4 text-2xl font-bold text-gray-400 hover:text-gray-600 z-10"
-      >
-        ✕
-      </button>
+            <button
+              onClick={() => setSelectedPlant(null)}
+              className="absolute top-4 right-4 text-2xl font-bold text-gray-400 hover:text-gray-600 z-10"
+            >
+              ✕
+            </button>
 
-      <div className="mt-4 md:mt-0 space-y-4">
-        <img
-          src={selectedPlant.photo}
-          className="w-full h-48 md:h-64 object-cover rounded-xl"
-          alt={selectedPlant.plantName}
-        />
+            <div className="mt-4 md:mt-0 space-y-4">
+              <img
+                src={selectedPlant.photo}
+                className="w-full h-48 md:h-64 object-cover rounded-xl"
+                alt={selectedPlant.plantName}
+              />
 
-        <div>
-          <h2 className="text-2xl md:text-3xl font-bold text-green-900 mb-2">
-            {selectedPlant.plantName}
-          </h2>
-          <p className="text-xs md:text-sm text-gray-500 font-semibold">
-            Voucher No: {selectedPlant.vendorNo}
-          </p>
+              <div>
+                <h2 className="text-2xl md:text-3xl font-bold text-green-900 mb-2">
+                  {selectedPlant.plantName}
+                </h2>
+                <p className="text-xs md:text-sm text-gray-500 font-semibold">
+                  Voucher No: {selectedPlant.vendorNo}
+                </p>
+              </div>
+
+              <div className="border-t border-green-100 pt-4">
+                <p className="text-sm md:text-base font-semibold text-green-700 mb-2">
+                  Family: <span className="text-gray-700 font-normal">{selectedPlant.family}</span>
+                </p>
+              </div>
+
+              <div className="border-t border-green-100 pt-4">
+                <p className="text-sm md:text-base font-semibold text-green-700 mb-2">Therapeutic Use:</p>
+                <p className="text-sm md:text-base text-gray-700 leading-relaxed">
+                  {selectedPlant.ethnobotanicalUse}
+                </p>
+              </div>
+
+              <button
+                onClick={() => setSelectedPlant(null)}
+                className="w-full bg-green-800 text-white px-4 py-3 rounded-lg hover:bg-green-700 transition-colors font-semibold text-sm md:text-base mt-6"
+              >
+                Close
+              </button>
+            </div>
+
+          </div>
         </div>
-
-        <div className="border-t border-green-100 pt-4">
-          <p className="text-sm md:text-base font-semibold text-green-700 mb-2">
-            Family: <span className="text-gray-700 font-normal">{selectedPlant.family}</span>
-          </p>
-        </div>
-
-        <div className="border-t border-green-100 pt-4">
-          <p className="text-sm md:text-base font-semibold text-green-700 mb-2">Therapeutic Use:</p>
-          <p className="text-sm md:text-base text-gray-700 leading-relaxed">
-            {selectedPlant.ethnobotanicalUse}
-          </p>
-        </div>
-
-        <button
-          onClick={() => setSelectedPlant(null)}
-          className="w-full bg-green-800 text-white px-4 py-3 rounded-lg hover:bg-green-700 transition-colors font-semibold text-sm md:text-base mt-6"
-        >
-          Close
-        </button>
-      </div>
-
-    </div>
-  </div>
-)}
+      )}
 
       {/* CONTACT */}
-         <section id="contact" className="py-24 px-6 md:px-16 bg-green-50">
+      <section id="contact" className="py-24 px-6 md:px-16 bg-green-50">
         <div className="max-w-6xl mx-auto">
           <div className="text-center mb-12">
             <h2 className="text-4xl font-bold text-green-900">Contact Us</h2>
@@ -684,8 +681,8 @@ export default function Home() {
         </div>
       </section>
 
-      
-     {/* ABOUT US + GET IN TOUCH */}
+
+      {/* ABOUT US + GET IN TOUCH */}
       <section className="relative bg-[#0f1123] text-gray-300 py-20 px-6 md:px-16 overflow-hidden">
 
         {/* Decorative background blobs */}
