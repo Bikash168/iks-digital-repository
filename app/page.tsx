@@ -205,31 +205,31 @@ export default function Home() {
         <div className="max-w-7xl mx-auto flex justify-between items-center px-8 h-full">
 
           {/* Logos + Title */}
-          <div className="flex items-center gap-6">
-            <div className="flex items-center gap-5 border-r border-gray-300 pr-6">
+          <div className="flex items-center gap-2 md:gap-6">
+            <div className="flex items-center gap-1 md:gap-3 border-r border-gray-300 pr-2 md:pr-6">
               <Image
                 src="/logo1.png"
                 alt="TACT Logo"
                 width={90}
                 height={90}
-                style={{ width: "90px", height: "90px", objectFit: "contain" }}
+                className="w-8 sm:w-12 md:w-16 lg:w-[90px] h-8 sm:h-12 md:h-16 lg:h-[90px] object-contain"
               />
               <Image
                 src="/logo2.png"
                 alt="IKS Logo"
                 width={110}
                 height={110}
-                style={{ width: "110px", height: "110px", objectFit: "contain" }}
+                className="w-10 sm:w-14 md:w-18 lg:w-[110px] h-10 sm:h-14 md:h-18 lg:h-[110px] object-contain"
               />
               <Image
                 src="/logo3.svg"
                 alt="Government Logo"
                 width={120}
                 height={120}
-                style={{ width: "120px", height: "120px", objectFit: "contain" }}
+                className="w-10 sm:w-15 md:w-20 lg:w-[120px] h-10 sm:h-15 md:h-20 lg:h-[120px] object-contain"
               />
             </div>
-            <h1 className="text-xl font-bold text-green-800 tracking-wide">
+            <h1 className="text-lg md:text-xl font-bold text-green-800 tracking-wide">
               IKS Digital Repository
             </h1>
           </div>
