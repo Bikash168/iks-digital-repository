@@ -389,26 +389,21 @@ export default function Home() {
           </p>
 
           {/* Statistics */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-            <div className="bg-white rounded-lg p-4 shadow-sm border border-green-200 text-center">
-              <div className="text-2xl font-bold text-green-800">{totalPlants}</div>
-              <div className="text-sm text-gray-600">Total Plants</div>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+            <div className="bg-gradient-to-br from-white to-green-50 rounded-xl p-6 shadow-lg border border-green-200 text-center hover:shadow-xl transition-all duration-300 hover:scale-105">
+              <div className="text-4xl mb-2">🌿</div>
+              <div className="text-3xl font-bold text-green-800 mb-1">{totalPlants}</div>
+              <div className="text-sm font-medium text-gray-600 uppercase tracking-wide">Total Plants</div>
             </div>
-            <div className="bg-white rounded-lg p-4 shadow-sm border border-green-200 text-center">
-              <div className="text-2xl font-bold text-green-800">{uniqueFamiliesCount}</div>
-              <div className="text-sm text-gray-600">Families</div>
+            <div className="bg-gradient-to-br from-white to-green-50 rounded-xl p-6 shadow-lg border border-green-200 text-center hover:shadow-xl transition-all duration-300 hover:scale-105">
+              <div className="text-4xl mb-2">🏠</div>
+              <div className="text-3xl font-bold text-green-800 mb-1">{uniqueFamiliesCount}</div>
+              <div className="text-sm font-medium text-gray-600 uppercase tracking-wide">Families</div>
             </div>
-            <div className="bg-white rounded-lg p-4 shadow-sm border border-green-200 text-center">
-              <div className="text-2xl font-bold text-green-800">{filteredCount}</div>
-              <div className="text-sm text-gray-600">Filtered</div>
-            </div>
-            <div className="bg-white rounded-lg p-4 shadow-sm border border-green-200 text-center">
-              <button
-                onClick={exportToCSV}
-                className="bg-green-800 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors text-sm font-medium"
-              >
-                Export CSV
-              </button>
+            <div className="bg-gradient-to-br from-white to-green-50 rounded-xl p-6 shadow-lg border border-green-200 text-center hover:shadow-xl transition-all duration-300 hover:scale-105">
+              <div className="text-4xl mb-2">🔍</div>
+              <div className="text-3xl font-bold text-green-800 mb-1">{filteredCount}</div>
+              <div className="text-sm font-medium text-gray-600 uppercase tracking-wide">Filtered</div>
             </div>
           </div>
 
