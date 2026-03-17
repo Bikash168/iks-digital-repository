@@ -25,10 +25,13 @@ export default function Home() {
   const [currentPage, setCurrentPage] = useState(1);
   const rowsPerPage = 10;
   const [selectedPlant, setSelectedPlant] = useState<Plant | null>(null);
-  const [search, setSearch] = useState("");
-  const [activeSection, setActiveSection] = useState("home");
+  const [sortBy, setSortBy] = useState<'name' | 'family' | 'voucher'>('name');
+  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
+  const [selectedFamily, setSelectedFamily] = useState<string>('all');
+  const [showAdvanced, setShowAdvanced] = useState(false);
+  const [search, setSearch] = useState('');
+  const [activeSection, setActiveSection] = useState<string>('home');
   const [menuOpen, setMenuOpen] = useState(false);
-  const [imgErrors, setImgErrors] = useState<Record<string, boolean>>({});
 
   useEffect(() => {
     const handleResize = () => {
@@ -49,8 +52,6 @@ export default function Home() {
         const jsonData = XLSX.utils.sheet_to_json(worksheet);
         
         console.log("Excel raw data (first row):", jsonData[0]); // Debug: log all columns
-        
-        // Map Excel columns to Plant type
         const plants: Plant[] = jsonData.map((row: any) => ({
           vendorNo: row["Voucher No."] || row["VoucherNo"] || row["voucher_no"] || row["Voucher#"] || row["voucher"] || row["Voucher No"] || "",
           plantName: row["Plant Name"] || row["PlantName"] || row["plant_name"] || "",
@@ -101,18 +102,78 @@ export default function Home() {
 
   const filteredData = data.filter(
     (item) =>
-      item.plantName.toLowerCase().includes(search.toLowerCase()) ||
+      (selectedFamily === 'all' || item.family.toLowerCase() === selectedFamily.toLowerCase()) &&
+      (item.plantName.toLowerCase().includes(search.toLowerCase()) ||
       item.family.toLowerCase().includes(search.toLowerCase()) ||
       item.vendorNo.toLowerCase().includes(search.toLowerCase()) ||
-      item.ethnobotanicalUse.toLowerCase().includes(search.toLowerCase())
+      item.ethnobotanicalUse.toLowerCase().includes(search.toLowerCase()))
   );
 
+  // Sort filtered data
+  const sortedData = [...filteredData].sort((a, b) => {
+    let aValue: string, bValue: string;
+    
+    switch (sortBy) {
+      case 'name':
+        aValue = a.plantName.toLowerCase();
+        bValue = b.plantName.toLowerCase();
+        break;
+      case 'family':
+        aValue = a.family.toLowerCase();
+        bValue = b.family.toLowerCase();
+        break;
+      case 'voucher':
+        aValue = a.vendorNo.toLowerCase();
+        bValue = b.vendorNo.toLowerCase();
+        break;
+      default:
+        return 0;
+    }
+    
+    if (sortOrder === 'asc') {
+      return aValue.localeCompare(bValue);
+    } else {
+      return bValue.localeCompare(aValue);
+    }
+  });
+
   // Calculate pagination
-  const totalPages = Math.ceil(filteredData.length / rowsPerPage);
-  const paginatedData = filteredData.slice(
+  const totalPages = Math.ceil(sortedData.length / rowsPerPage);
+  const paginatedData = sortedData.slice(
     (currentPage - 1) * rowsPerPage,
     currentPage * rowsPerPage
   );
+
+  // Get unique families for filter dropdown
+  const uniqueFamilies = Array.from(new Set(data.map(item => item.family))).sort();
+
+  // Calculate statistics
+  const totalPlants = data.length;
+  const uniqueFamiliesCount = uniqueFamilies.length;
+  const filteredCount = sortedData.length;
+
+  // Export to CSV function
+  const exportToCSV = () => {
+    const csvData = sortedData.map(item => ({
+      'Voucher No.': item.vendorNo,
+      'Plant Name': item.plantName,
+      'Family': item.family,
+      'Therapeutic Use': item.ethnobotanicalUse
+    }));
+    
+    const csvString = [
+      Object.keys(csvData[0]).join(','),
+      ...csvData.map(row => Object.values(row).map(val => `"${val}"`).join(','))
+    ].join('\n');
+    
+    const blob = new Blob([csvString], { type: 'text/csv' });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `ethno-medicinal-plants-${new Date().toISOString().split('T')[0]}.csv`;
+    a.click();
+    window.URL.revokeObjectURL(url);
+  };
 
   // FIX 2: navItem helper restored — used for active-link underline highlighting
   const navItem = (id: string, label: string) => (
@@ -329,15 +390,115 @@ export default function Home() {
             Ethno-medicinal plant records documented from tribal communities of Eastern Odisha.
           </p>
 
-          {/* Search */}
+          {/* Statistics */}
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+            <div className="bg-white rounded-lg p-4 shadow-sm border border-green-200 text-center">
+              <div className="text-2xl font-bold text-green-800">{totalPlants}</div>
+              <div className="text-sm text-gray-600">Total Plants</div>
+            </div>
+            <div className="bg-white rounded-lg p-4 shadow-sm border border-green-200 text-center">
+              <div className="text-2xl font-bold text-green-800">{uniqueFamiliesCount}</div>
+              <div className="text-sm text-gray-600">Families</div>
+            </div>
+            <div className="bg-white rounded-lg p-4 shadow-sm border border-green-200 text-center">
+              <div className="text-2xl font-bold text-green-800">{filteredCount}</div>
+              <div className="text-sm text-gray-600">Filtered</div>
+            </div>
+            <div className="bg-white rounded-lg p-4 shadow-sm border border-green-200 text-center">
+              <button
+                onClick={exportToCSV}
+                className="bg-green-800 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors text-sm font-medium"
+              >
+                Export CSV
+              </button>
+            </div>
+          </div>
+
+          {/* Advanced Search & Filters */}
           <div className="bg-white rounded-xl md:rounded-2xl shadow-lg p-4 md:p-6 mb-6 md:mb-8 border border-green-200">
-            <input
-              type="text"
-              placeholder="Search by plant name, family, usage…"
-              className="w-full px-4 md:px-5 py-2 md:py-3 border-2 border-green-800 rounded-lg md:rounded-xl focus:outline-none focus:ring-4 focus:ring-green-300 text-sm md:text-base text-gray-800 placeholder:text-gray-400"
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-            />
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-semibold text-green-900">Research Tools</h3>
+              <button
+                onClick={() => setShowAdvanced(!showAdvanced)}
+                className="text-green-700 hover:text-green-900 font-medium text-sm"
+              >
+                {showAdvanced ? 'Hide' : 'Show'} Advanced Filters
+              </button>
+            </div>
+
+            {/* Basic Search */}
+            <div className="mb-4">
+              <input
+                type="text"
+                placeholder="Search by plant name, family, voucher number, or therapeutic use…"
+                className="w-full px-4 md:px-5 py-2 md:py-3 border-2 border-green-800 rounded-lg md:rounded-xl focus:outline-none focus:ring-4 focus:ring-green-300 text-sm md:text-base text-gray-800 placeholder:text-gray-400"
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+              />
+            </div>
+
+            {/* Advanced Filters */}
+            {showAdvanced && (
+              <div className="grid md:grid-cols-3 gap-4 mb-4 p-4 bg-green-50 rounded-lg">
+                {/* Family Filter */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Filter by Family</label>
+                  <select
+                    value={selectedFamily}
+                    onChange={(e) => setSelectedFamily(e.target.value)}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 text-sm"
+                  >
+                    <option value="all">All Families</option>
+                    {uniqueFamilies.map(family => (
+                      <option key={family} value={family}>{family}</option>
+                    ))}
+                  </select>
+                </div>
+
+                {/* Sort By */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Sort By</label>
+                  <select
+                    value={sortBy}
+                    onChange={(e) => setSortBy(e.target.value as 'name' | 'family' | 'voucher')}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 text-sm"
+                  >
+                    <option value="name">Plant Name</option>
+                    <option value="family">Family</option>
+                    <option value="voucher">Voucher No.</option>
+                  </select>
+                </div>
+
+                {/* Sort Order */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Sort Order</label>
+                  <select
+                    value={sortOrder}
+                    onChange={(e) => setSortOrder(e.target.value as 'asc' | 'desc')}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 text-sm"
+                  >
+                    <option value="asc">Ascending (A-Z)</option>
+                    <option value="desc">Descending (Z-A)</option>
+                  </select>
+                </div>
+              </div>
+            )}
+
+            {/* Clear Filters */}
+            {(search || selectedFamily !== 'all') && (
+              <div className="flex gap-2">
+                <button
+                  onClick={() => {
+                    setSearch('');
+                    setSelectedFamily('all');
+                    setCurrentPage(1);
+                  }}
+                  className="px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors text-sm font-medium"
+                >
+                  Clear All Filters
+                </button>
+              </div>
+            )}
           </div>
 
           {/* Table */}
@@ -424,7 +585,7 @@ export default function Home() {
   ))}
 </div>
           <p className="text-right text-xs text-gray-400 mt-3">
-            Showing {filteredData.length} of {data.length} records
+            Showing {filteredCount} of {totalPlants} records
           </p>
         </div>
       </section>
