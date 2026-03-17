@@ -423,6 +423,96 @@ export default function Home() {
         </div>
       </section>
 
+      
+     {/* ABOUT US + GET IN TOUCH */}
+      <section className="relative bg-[#0f1123] text-gray-300 py-20 px-6 md:px-16 overflow-hidden">
+
+        {/* Decorative background blobs */}
+        <div className="absolute top-0 left-0 w-72 h-72 bg-green-900 opacity-20 rounded-full blur-3xl -translate-x-1/2 -translate-y-1/2 pointer-events-none" />
+        <div className="absolute bottom-0 right-0 w-72 h-72 bg-green-800 opacity-20 rounded-full blur-3xl translate-x-1/2 translate-y-1/2 pointer-events-none" />
+
+        <div className="relative max-w-6xl mx-auto grid md:grid-cols-2 gap-16 items-start">
+
+          {/* ── About Us ── */}
+          <div className="space-y-5">
+            <div>
+              <h3 className="text-3xl font-extrabold text-white tracking-wide">
+                ABOUT <span className="text-green-400">US</span>
+              </h3>
+              <div className="mt-2 w-12 h-1 bg-green-500 rounded-full" />
+            </div>
+            <p className="text-gray-400 leading-relaxed text-[15px]">
+              Trident Academy of Creative Technology, a name that has become a brand in the field of
+              technical education, is today synonymous with excellence. Trident is where Education meets
+              Enthusiasm. Within just a few years of its establishment, Trident group of institutions has
+              built an image amongst the aspiring masses which is worth the quality of education it imparts.
+            </p>
+            <a
+              href="https://tact.ac.in"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-2 text-sm font-semibold text-green-400 hover:text-green-300 transition-colors group"
+            >
+              Learn More
+              <span className="group-hover:translate-x-1 transition-transform">→</span>
+            </a>
+          </div>
+
+          {/* Divider (vertical on desktop) */}
+          <div className="hidden md:block absolute left-1/2 top-0 bottom-0 w-px bg-gradient-to-b from-transparent via-green-800 to-transparent" />
+
+          {/* ── Get In Touch ── */}
+          <div className="space-y-5 md:pl-8">
+            <div>
+              <h3 className="text-3xl font-extrabold text-white tracking-wide">
+                GET <span className="text-green-400">IN TOUCH</span>
+              </h3>
+              <div className="mt-2 w-12 h-1 bg-green-500 rounded-full" />
+            </div>
+
+            <ul className="space-y-5 text-[15px]">
+              {/* Address */}
+              <li className="flex items-start gap-4">
+                <span className="mt-1 flex-shrink-0 w-9 h-9 rounded-full bg-green-900/60 border border-green-700 flex items-center justify-center text-green-400 text-base">
+                  📍
+                </span>
+                <span className="text-gray-400 leading-relaxed">
+                  F-2, Chandaka Industrial Estate<br />
+                  In front of Infocity, Infocity<br />
+                  Chandrasekharpur, Bhubaneshwar<br />
+                  Odisha – 751024
+                </span>
+              </li>
+
+              {/* Email */}
+              <li className="flex items-center gap-4">
+                <span className="flex-shrink-0 w-9 h-9 rounded-full bg-green-900/60 border border-green-700 flex items-center justify-center text-green-400 text-base">
+                  ✉️
+                </span>
+                <a
+                  href="mailto:info@trident.ac.in"
+                  className="text-gray-400 hover:text-green-400 transition-colors"
+                >
+                  info@trident.ac.in
+                </a>
+              </li>
+
+              {/* Phone */}
+              <li className="flex items-start gap-4">
+                <span className="mt-1 flex-shrink-0 w-9 h-9 rounded-full bg-green-900/60 border border-green-700 flex items-center justify-center text-green-400 text-base">
+                  📞
+                </span>
+                <span className="text-gray-400 leading-relaxed">
+                  0674-6649003, 6649008, 6649036,<br />
+                  0674-6649043
+                </span>
+              </li>
+            </ul>
+          </div>
+
+        </div>
+      </section>
+
       {/* FOOTER */}
       <footer className="bg-green-950 text-gray-400 py-10 text-center text-sm">
         <p>&copy; {new Date().getFullYear()} Trident Academy of Creative Technology, BBSR &amp; IKS Division, Govt. of India. All rights reserved.</p>
