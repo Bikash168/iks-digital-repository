@@ -57,7 +57,8 @@ export default function Home() {
           plantName: row["Plant Name"] || row["PlantName"] || row["plant_name"] || "",
           family: row["Family"] || row["family"] || "",
           ethnobotanicalUse: row["Therapeutic Use"] || row["TherapeuticUse"] || row["Use"] || row["use"] || row["Ethnobotanical Use"] || "",
-          photo: row["Photo"] || row["photo"] || row["Image"] || row["image"] || "/placeholder.jpg",
+          // Prefer to use the name-based image lookup when the sheet doesn't include a photo column.
+          photo: row["Photo"] || row["photo"] || row["Image"] || row["image"] || "",
         }));
 
         console.log("✅ Loaded plants:", plants.length);
@@ -146,6 +147,138 @@ export default function Home() {
 
   // Get unique families for filter dropdown
   const uniqueFamilies = Array.from(new Set(data.map(item => item.family))).sort();
+
+  // Build image URL candidates for a plant record.
+  // If the data row is missing a Photo column, we fall back to using the plant name.
+  // If the plant name is "Acalypha indica" but the file is "Acalypha indica (2).jpg", we will try that too.
+  const getPlantImageCandidates = (photo: string, plantName: string) => {
+    const rawPhoto = (photo || "").trim();
+    const rawName = (plantName || "").trim();
+    const source = rawPhoto || rawName;
+
+    if (!source) return ["/hero-plant.png"];
+
+    // If the source is already a URL or absolute path, only try that + placeholder.
+    if (source.startsWith("http://") || source.startsWith("https://") || source.startsWith("/")) {
+      return [source, "/hero-plant.png"];
+    }
+
+    const exts = [".jpg", ".jpeg", ".png", ".webp", ".gif"];
+
+    const hasExistingExt = /\.(jpe?g|png|webp|gif)$/i.test(source);
+    const baseName = source.replace(/\.(jpe?g|png|webp|gif)$/i, "").trim();
+
+    const normalizeBase = (name: string) => name.replace(/\s+/g, " ").trim();
+    const withoutTrailingDot = (name: string) => name.replace(/\.+$/, "").trim();
+
+    const makeCandidates = (name: string) => {
+      const normalized = normalizeBase(name);
+      const withoutDot = withoutTrailingDot(normalized);
+      const bases = Array.from(new Set([normalized, withoutDot]));
+
+      const candidates: string[] = [];
+
+      for (const base of bases) {
+        if (hasExistingExt) {
+          // If the source already includes an extension, just use it (plus a spaced variant)
+          candidates.push(`/plants/${encodeURIComponent(base)}`);
+          candidates.push(`/plants/${encodeURIComponent(`${base} `)}`);
+        } else {
+          for (const ext of exts) {
+            candidates.push(`/plants/${encodeURIComponent(`${base}${ext}`)}`);
+            candidates.push(`/plants/${encodeURIComponent(`${base} ${ext}`)}`);
+          }
+        }
+      }
+
+      return candidates;
+    };
+
+    const candidates = makeCandidates(source);
+
+    // If the plant name is not already a "(2)" variant, try the "(2)" filename too.
+    if (!/\(2\)\.jpe?g$/i.test(source) && !/\(2\)$/i.test(source)) {
+      candidates.push(...makeCandidates(`${baseName} (2)`));
+    }
+
+    // Also try the base without the " (2)" suffix if the provided source has it.
+    const noTwo = baseName.replace(/\s*\(2\)$/, "").trim();
+    if (noTwo && noTwo !== baseName) {
+      candidates.push(...makeCandidates(noTwo));
+    }
+
+    candidates.push("/hero-plant.png");
+    return Array.from(new Set(candidates));
+  };
+
+  const PlantImageCarousel = ({
+    photo,
+    plantName,
+    className,
+    ...props
+  }: {
+    photo: string;
+    plantName: string;
+    className?: string;
+    [key: string]: any;
+  }) => {
+    const candidates = getPlantImageCandidates(photo, plantName);
+    const [index, setIndex] = useState(0);
+
+    // Reset whenever the plant changes.
+    useEffect(() => {
+      setIndex(0);
+    }, [photo, plantName]);
+
+    const normalizedIndex = Math.min(index, Math.max(0, candidates.length - 1));
+    const prev = () => setIndex((i) => Math.max(0, i - 1));
+    const next = () => setIndex((i) => Math.min(candidates.length - 1, i + 1));
+
+    const handleError = () => {
+      setIndex((i) => (i < candidates.length - 1 ? i + 1 : i));
+    };
+
+    return (
+      <div className="relative">
+        <img
+          src={candidates[normalizedIndex]}
+          className={className}
+          onError={handleError}
+          {...props}
+        />
+
+        {candidates.length > 1 && (
+          <div className="absolute inset-x-0 top-2 flex items-center justify-between px-4">
+            <button
+              onClick={prev}
+              className="rounded-full bg-black/40 text-white p-2 hover:bg-black/60 transition"
+              disabled={normalizedIndex === 0}
+            >
+              ‹
+            </button>
+            <button
+              onClick={next}
+              className="rounded-full bg-black/40 text-white p-2 hover:bg-black/60 transition"
+              disabled={normalizedIndex === candidates.length - 1}
+            >
+              ›
+            </button>
+          </div>
+        )}
+
+        {candidates.length > 1 && (
+          <div className="absolute bottom-2 left-1/2 -translate-x-1/2 flex items-center gap-2">
+            {candidates.map((_, i) => (
+              <span
+                key={i}
+                className={`h-2 w-2 rounded-full ${i === normalizedIndex ? "bg-white" : "bg-white/50"}`}
+              />
+            ))}
+          </div>
+        )}
+      </div>
+    );
+  };
 
   // Calculate statistics
   const totalPlants = data.length;
@@ -599,8 +732,9 @@ export default function Home() {
             </button>
 
             <div className="mt-4 md:mt-0 space-y-4">
-              <img
-                src={selectedPlant.photo}
+              <PlantImageCarousel
+                photo={selectedPlant.photo}
+                plantName={selectedPlant.plantName}
                 className="w-full h-48 md:h-64 object-cover rounded-xl"
                 alt={selectedPlant.plantName}
               />
