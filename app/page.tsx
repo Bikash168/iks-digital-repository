@@ -151,6 +151,7 @@ export default function Home() {
   const totalPlants = data.length;
   const uniqueFamiliesCount = uniqueFamilies.length;
   const filteredCount = sortedData.length;
+  const uniqueUsesCount = Array.from(new Set(data.map(item => item.ethnobotanicalUse))).length;
 
   // Export to CSV function
   const exportToCSV = () => {
@@ -389,7 +390,7 @@ export default function Home() {
           </p>
 
           {/* Statistics */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-6 mb-8">
             <div className="bg-gradient-to-br from-white to-green-50 rounded-xl p-6 shadow-lg border border-green-200 text-center hover:shadow-xl transition-all duration-300 hover:scale-105">
               <div className="text-4xl mb-2">🌿</div>
               <div className="text-3xl font-bold text-green-800 mb-1">{totalPlants}</div>
@@ -404,6 +405,11 @@ export default function Home() {
               <div className="text-4xl mb-2">🔍</div>
               <div className="text-3xl font-bold text-green-800 mb-1">{filteredCount}</div>
               <div className="text-sm font-medium text-gray-600 uppercase tracking-wide">Filtered</div>
+            </div>
+            <div className="bg-gradient-to-br from-white to-green-50 rounded-xl p-6 shadow-lg border border-green-200 text-center hover:shadow-xl transition-all duration-300 hover:scale-105">
+              <div className="text-4xl mb-2">💊</div>
+              <div className="text-3xl font-bold text-green-800 mb-1">{uniqueUsesCount}</div>
+              <div className="text-sm font-medium text-gray-600 uppercase tracking-wide">Therapeutic Uses</div>
             </div>
           </div>
 
