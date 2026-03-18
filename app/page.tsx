@@ -487,45 +487,72 @@ export default function Home() {
       {/* ABOUT */}
       <section id="about" className="py-24 px-6 md:px-16 bg-[#f8f6f1]">
         <div className="max-w-7xl mx-auto">
+
+          {/* HEADER */}
           <div className="text-center mb-16">
-            <h2 className="text-4xl md:text-5xl font-bold text-green-900">IKS Digital Repository</h2>
-            <p className="text-lg text-yellow-700 mt-2 font-semibold">Trident Translational Initiative</p>
+            <h2 className="text-4xl md:text-5xl font-bold text-green-900">
+              IKS digital repository
+            </h2>
+            <p className="text-lg text-yellow-700 mt-2 font-semibold">
+              Trident Translational Initiative
+            </p>
             <div className="w-24 h-1 bg-yellow-500 mx-auto mt-4 rounded-full" />
           </div>
+
+          {/* FIRST ROW */}
           <div className="grid md:grid-cols-2 gap-12 items-center">
-            <div className="space-y-6 text-justify hyphens-auto text-gray-700 leading-relaxed text-lg">
-              <p>The Indian Knowledge Systems (IKS) are a well-organized and scientifically valid body of knowledge developed over the centuries through practice and observation. It is imperative to give prime importance to the documentation and digital preservation of the IKS. This will ensure the preservation of the indigenous intellectual heritage for the coming generations. The enhancement of the IKS in the empirical knowledge systems will make it more relevant to the present-day challenges faced by society.</p>
-              <p>The IKS sanctioned project, <span className="font-semibold text-green-900">&ldquo;Development of Digital Repository for Documentation of Ethno-medicinal Plants Used by Different Tribal Communities of Eastern Odisha for Holistic Healthcare Management,&rdquo;</span> led by <strong>Dr. Manisha Mohapatra</strong>, is one of the examples of the efforts put forth to demonstrate the translational approach for empirical knowledge-driven health assessments in tribal communities of eastern Odisha.</p>
+
+            {/* TEXT */}
+            <div className="text-justify text-gray-700 leading-relaxed text-lg space-y-6">
+              <p>
+                The Indian Knowledge Systems (IKS) are a well-organized and scientifically valid body of knowledge developed over the centuries through practice and observation. It is imperative to give prime importance to the documentation and digital preservation of the IKS. This will ensure the preservation of the indigenous intellectual heritage for the coming generations. The enhancement of the IKS in the empirical knowledge systems will make it more relevant to the present-day challenges faced by society. The IKS sanctioned project, “Development of Digital Repository for Documentation of Ethno-medicinal Plants Used by Different Tribal Communities of Eastern Odisha for Holistic Healthcare Management,” led by Dr. Manisha Mohapatra, is one of the examples of the efforts put forth to demonstrate the translational approach for empirical knowledge-driven health assessments in tribal communities of eastern Odisha.
+              </p>
             </div>
-            <div className="relative">
-              <div className="absolute -top-3 -left-3 w-full h-full border-4 border-yellow-500 rounded-2xl pointer-events-none" />
-              <div className="relative z-10 w-full min-h-[260px] md:min-h-[340px] rounded-2xl overflow-hidden shadow-2xl">
-                <Image src="/about-plant.jpg" alt="Medicinal Plant" fill className="object-cover" />
+
+            {/* IMAGE */}
+            <div className="flex justify-center">
+              <div className="w-full max-w-lg rounded-2xl overflow-hidden shadow-2xl border border-green-100">
+                <Image
+                  src="/about-plant.jpg"
+                  alt="IKS About"
+                  width={600}
+                  height={400}
+                  className="w-full h-auto object-cover"
+                />
               </div>
             </div>
+
           </div>
-          <div className="grid md:grid-cols-2 gap-12 items-center mt-20">
-            <div className="relative order-2 md:order-1">
-            <div className="relative z-10 w-full max-w-xl mx-auto rounded-3xl overflow-hidden shadow-2xl ring-1 ring-green-200/70">
-              <div className="aspect-[16/9] bg-gradient-to-br from-white/80 via-white/40 to-white/10">
-                <Image src="/tribal-medicine.jpg" alt="Tribal Ethnomedicine" fill className="object-cover" />
+
+          {/* SECOND ROW */}
+          <div className="grid md:grid-cols-2 gap-12 items-center mt-16">
+
+            {/* IMAGE + CAPTION */}
+            <div className="order-2 md:order-1 flex flex-col items-center">
+              <div className="w-full max-w-xl rounded-2xl overflow-hidden shadow-2xl border border-green-100">
+                <Image
+                  src="/tribal-medicine.jpg"
+                  alt="Tribal Ethnomedicine"
+                  width={700}
+                  height={450}
+                  className="w-full h-auto object-contain bg-white"
+                />
               </div>
             </div>
-            <div className="mt-6 text-center">
-              <p className="text-sm font-semibold text-green-900 uppercase tracking-wide">Tribal Ethnomedicine</p>
-              <p className="text-xs text-gray-500">Traditional knowledge from Eastern Odisha</p>
+
+            {/* TEXT */}
+            <div className="text-justify text-gray-700 leading-relaxed text-lg space-y-6 order-1 md:order-2">
+              <p>
+                In the tribal scenario of eastern Odisha, the ethnomedicinal systems have shown a deep understanding of biodiversity, plant identification, preparation methods, dosage standards, and their usage. However, due to the largely oral and embedded nature of such knowledge in the cultural practices of the communities, it is susceptible to deterioration due to socio-economic changes, environmental changes, and the loss of continuity. In light of the urgent need to document and preserve such knowledge, an attempt is being made to document and digitize the knowledge in a way that preserves it while maintaining its authenticity and integrity. Ethnographic documentation, authentication of plant species, and documentation of preparation techniques, applications, and traditional stories associated with them are being done systematically. The digital platform is being developed to allow for searching, metadata integration, and long-term preservation in conformity with established data management practices. Through the conversion of tacit indigenous knowledge into a scientifically organized digital platform, this project is enhancing knowledge continuity, facilitating inter-disciplinary research, and informing decision-making on biodiversity conservation and sustainable healthcare practices. Simultaneously, ethical considerations including intellectual property protection and equitable benefit-sharing are being incorporated to ensure responsible and community-sensitive knowledge governance.
+              </p>
             </div>
+
           </div>
-            <div className="space-y-6 text-justify hyphens-auto text-gray-700 leading-relaxed text-lg order-1 md:order-2">
-              <p>In the tribal scenario of eastern Odisha, the ethnomedicinal systems have shown a deep understanding of biodiversity, plant identification, preparation methods, dosage standards, and their usage. However, due to the largely oral and embedded nature of such knowledge in the cultural practices of the communities, it is susceptible to deterioration due to socio-economic changes, environmental changes, and the loss of continuity.</p>
-              <p>In light of the urgent need to document and preserve such knowledge, an attempt is being made to document and digitize the knowledge in a way that preserves it while maintaining its authenticity and integrity. Ethnographic documentation, authentication of plant species, and documentation of preparation techniques, applications, and traditional stories associated with them are being done systematically. The digital platform is being developed to allow for searching, metadata integration, and long-term preservation in conformity with established data management practices.</p>
-              <p>Through the conversion of tacit indigenous knowledge into a scientifically organized digital platform, this project is enhancing knowledge continuity, facilitating inter-disciplinary research, and informing decision-making on biodiversity conservation and sustainable healthcare practices. Simultaneously, ethical considerations including intellectual property protection and equitable benefit-sharing are being incorporated to ensure responsible and community-sensitive knowledge governance.</p>
-            </div>
-          </div>
+
         </div>
       </section>
 
-     {/* PROJECT */}
+      {/* PROJECT */}
       <section id="project" className="py-20 sm:py-28 px-5 sm:px-8 lg:px-16 bg-green-50">
         <div className="max-w-4xl mx-auto">
           <div className="text-center mb-12">
@@ -753,8 +780,8 @@ export default function Home() {
                 key={i}
                 onClick={() => setCurrentPage(i + 1)}
                 className={`px-2 md:px-3 py-1 rounded text-xs md:text-sm font-medium transition-all ${currentPage === i + 1
-                    ? "bg-green-800 text-white"
-                    : "bg-gray-200 hover:bg-gray-300 text-gray-800"
+                  ? "bg-green-800 text-white"
+                  : "bg-gray-200 hover:bg-gray-300 text-gray-800"
                   }`}
               >
                 {i + 1}
@@ -819,7 +846,7 @@ export default function Home() {
         </div>
       )}
 
-        {/* GALLERY */}
+      {/* GALLERY */}
       <section id="gallery" className="py-20 px-6 md:px-16 bg-white">
         <div className="max-w-7xl mx-auto">
           <div className="text-center mb-12">
@@ -888,7 +915,7 @@ export default function Home() {
         </div>
       </section>
 
-    
+
 
 
       {/* ABOUT US + GET IN TOUCH */}
@@ -980,7 +1007,7 @@ export default function Home() {
         </div>
       </section>
 
-      
+
 
       {/* FOOTER */}
       <footer className="bg-green-950 text-gray-400 py-10 text-center text-sm">
