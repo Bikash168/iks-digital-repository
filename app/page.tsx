@@ -18,10 +18,11 @@ import * as XLSX from "xlsx";
 
 // FIX 1: Single declaration of NAVBAR_HEIGHT as a number (used for scroll offset calculations)
 const NAVBAR_HEIGHT = 130;
-const NAV_SECTIONS = ["home", "about", "project", "database", "contact"] as const;
+const NAV_SECTIONS = ["home", "about", "project", "database", "gallery", "contact"] as const;
 
 export default function Home() {
   const [data, setData] = useState<Plant[]>([]);
+  const [galleryImages, setGalleryImages] = useState<string[]>([]);
   const [currentPage, setCurrentPage] = useState(1);
   const rowsPerPage = 10;
   const [selectedPlant, setSelectedPlant] = useState<Plant | null>(null);
@@ -71,6 +72,22 @@ export default function Home() {
     };
 
     loadExcelData();
+  }, []);
+
+  useEffect(() => {
+    const loadGalleryImages = async () => {
+      try {
+        const res = await fetch('/api/gallery');
+        const json = await res.json();
+        if (Array.isArray(json.images)) {
+          setGalleryImages(json.images);
+        }
+      } catch (error) {
+        console.error('Failed to load gallery images:', error);
+      }
+    };
+
+    loadGalleryImages();
   }, []);
 
   useEffect(() => {
@@ -372,6 +389,7 @@ export default function Home() {
             {navItem("about", "About")}
             {navItem("project", "Project")}
             {navItem("database", "Database")}
+            {navItem("gallery", "Gallery")}
             {navItem("contact", "Contact")}
           </div>
 
@@ -390,10 +408,27 @@ export default function Home() {
         {/* Mobile Dropdown Menu */}
         {menuOpen && (
           <div className="md:hidden bg-white border-t border-green-100 shadow-lg px-8 py-4 flex flex-col gap-4 text-[15px] font-semibold">
+            {/* Gallery Preview inside Mobile Menu */}
+            <div className="flex gap-2 overflow-x-auto pb-2">
+              {(galleryImages.length ? galleryImages.slice(0, 5) : ["/hero-plant.png"]).map((src, idx) => (
+                <img
+                  key={idx}
+                  src={src}
+                  alt="Gallery image"
+                  className="h-16 w-16 flex-shrink-0 rounded-lg object-cover border border-green-100"
+                  onError={(e) => {
+                    const target = e.currentTarget as HTMLImageElement;
+                    target.src = "/hero-plant.png";
+                  }}
+                />
+              ))}
+            </div>
+
             {navItem("home", "Home")}
             {navItem("about", "About")}
             {navItem("project", "Project")}
             {navItem("database", "Database")}
+            {navItem("gallery", "Gallery")}
             {navItem("contact", "Contact")}
           </div>
         )}
@@ -773,6 +808,32 @@ export default function Home() {
         </div>
       )}
 
+        {/* GALLERY */}
+      <section id="gallery" className="py-20 px-6 md:px-16 bg-white">
+        <div className="max-w-7xl mx-auto">
+          <div className="text-center mb-12">
+            <h2 className="text-4xl font-bold text-green-900">Gallery</h2>
+            <div className="w-24 h-1 bg-yellow-500 mx-auto mt-4 rounded-full" />
+          </div>
+
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
+            {(galleryImages.length ? galleryImages.slice(0, 12) : ["/hero-plant.png"]).map((src, idx) => (
+              <div key={src + idx} className="rounded-2xl overflow-hidden border border-green-100 shadow-sm hover:shadow-md transition-shadow">
+                <img
+                  src={src}
+                  alt="Gallery image"
+                  className="w-full h-40 md:h-44 lg:h-48 object-cover"
+                  onError={(e) => {
+                    const target = e.currentTarget as HTMLImageElement;
+                    target.src = "/hero-plant.png";
+                  }}
+                />
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
       {/* CONTACT */}
       <section id="contact" className="py-24 px-6 md:px-16 bg-green-50">
         <div className="max-w-6xl mx-auto">
@@ -815,6 +876,8 @@ export default function Home() {
           </div>
         </div>
       </section>
+
+    
 
 
       {/* ABOUT US + GET IN TOUCH */}
@@ -905,6 +968,8 @@ export default function Home() {
 
         </div>
       </section>
+
+      
 
       {/* FOOTER */}
       <footer className="bg-green-950 text-gray-400 py-10 text-center text-sm">
