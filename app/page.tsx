@@ -346,45 +346,42 @@ export default function Home() {
   return (
     <main className="font-serif bg-[#f8f6f1]">
 
-      {/* NAVBAR — FIX 3: removed stray `const` declarations that were placed inside JSX */}
-      <nav
-        className="fixed top-0 w-full bg-white shadow-md z-50 border-b"
-        style={{ height: `${NAVBAR_HEIGHT}px` }}
-      >
-        <div className="max-w-7xl mx-auto flex justify-between items-center px-8 h-full">
-
-          {/* Logos + Title */}
-          <div className="flex items-center gap-2 md:gap-6">
-            <div className="flex items-center gap-1 md:gap-3 border-r border-gray-300 pr-2 md:pr-6">
+      {/* NAVBAR */}
+      <nav className="fixed top-0 w-full bg-white shadow-md z-50">
+        <div className="max-w-7xl mx-auto flex items-center justify-between px-6 md:px-8 py-3 md:py-4">
+          {/* Logo + Title */}
+          <div className="flex items-center gap-4 md:gap-8">
+            <div className="flex items-center gap-4 md:gap-5">
               <Image
                 src="/logo1.png"
                 alt="TACT Logo"
-                width={90}
-                height={90}
-                className="w-8 sm:w-12 md:w-16 lg:w-[90px] h-8 sm:h-12 md:h-16 lg:h-[90px] object-contain"
+                width={110}
+                height={110}
+                className="w-14 h-14 md:w-18 md:h-18 lg:w-22 lg:h-22 object-contain"
               />
               <Image
                 src="/logo2.png"
                 alt="IKS Logo"
                 width={110}
                 height={110}
-                className="w-10 sm:w-14 md:w-18 lg:w-[110px] h-10 sm:h-14 md:h-18 lg:h-[110px] object-contain"
+                className="w-14 h-14 md:w-18 md:h-18 lg:w-22 lg:h-22 object-contain"
               />
               <Image
                 src="/logo3.svg"
                 alt="Government Logo"
-                width={120}
-                height={120}
-                className="w-10 sm:w-15 md:w-20 lg:w-[120px] h-10 sm:h-15 md:h-20 lg:h-[120px] object-contain"
+                width={110}
+                height={110}
+                className="w-14 h-14 md:w-18 md:h-18 lg:w-22 lg:h-22 object-contain"
               />
             </div>
-            <h1 className="text-lg md:text-xl font-bold text-green-800 tracking-wide">
-              IKS Digital Repository
-            </h1>
+            <div className="hidden md:flex flex-col leading-tight">
+              <span className="text-lg font-bold text-green-900">IKS Digital Repository</span>
+              <span className="text-xs text-green-600">Ethno-medicinal knowledge</span>
+            </div>
           </div>
 
-          {/* Desktop Menu — FIX 4: uses navItem() helper for active highlighting */}
-          <div className="hidden md:flex items-center space-x-10 text-[16px] font-semibold">
+          {/* Desktop Menu */}
+          <div className="hidden md:flex items-center gap-10 text-[16px] font-semibold text-green-800">
             {navItem("home", "Home")}
             {navItem("about", "About")}
             {navItem("project", "Project")}
@@ -393,9 +390,9 @@ export default function Home() {
             {navItem("contact", "Contact")}
           </div>
 
-          {/* Mobile Hamburger — FIX 5: wired up to menuOpen state */}
+          {/* Mobile Hamburger */}
           <button
-            className="md:hidden flex flex-col gap-1.5 p-2"
+            className="md:hidden flex flex-col gap-1.5 p-2 bg-white rounded-xl border border-green-200 shadow-sm"
             onClick={() => setMenuOpen((prev) => !prev)}
             aria-label="Toggle menu"
           >
@@ -407,8 +404,7 @@ export default function Home() {
 
         {/* Mobile Dropdown Menu */}
         {menuOpen && (
-          <div className="md:hidden bg-white border-t border-green-100 shadow-lg px-8 py-4 flex flex-col gap-4 text-[15px] font-semibold">
-            {/* Gallery Preview inside Mobile Menu */}
+          <div className="md:hidden bg-white border-t border-green-100 shadow-lg px-6 py-4 flex flex-col gap-4 text-[15px] font-semibold">
             <div className="flex gap-2 overflow-x-auto pb-2">
               {(galleryImages.length ? galleryImages.slice(0, 5) : ["/hero-plant.png"]).map((src, idx) => (
                 <img
@@ -424,12 +420,14 @@ export default function Home() {
               ))}
             </div>
 
-            {navItem("home", "Home")}
-            {navItem("about", "About")}
-            {navItem("project", "Project")}
-            {navItem("database", "Database")}
-            {navItem("gallery", "Gallery")}
-            {navItem("contact", "Contact")}
+            <div className="flex flex-col gap-3">
+              {navItem("home", "Home")}
+              {navItem("about", "About")}
+              {navItem("project", "Project")}
+              {navItem("database", "Database")}
+              {navItem("gallery", "Gallery")}
+              {navItem("contact", "Contact")}
+            </div>
           </div>
         )}
       </nav>
@@ -508,11 +506,16 @@ export default function Home() {
           </div>
           <div className="grid md:grid-cols-2 gap-12 items-center mt-20">
             <div className="relative order-2 md:order-1">
-              <div className="absolute -bottom-3 -right-3 w-full h-full border-4 border-green-800 rounded-2xl pointer-events-none" />
-              <div className="relative z-10 w-full min-h-[260px] md:min-h-[340px] rounded-2xl overflow-hidden shadow-2xl">
+            <div className="relative z-10 w-full max-w-xl mx-auto rounded-3xl overflow-hidden shadow-2xl ring-1 ring-green-200/70">
+              <div className="aspect-[16/9] bg-gradient-to-br from-white/80 via-white/40 to-white/10">
                 <Image src="/tribal-medicine.jpg" alt="Tribal Ethnomedicine" fill className="object-cover" />
               </div>
             </div>
+            <div className="mt-6 text-center">
+              <p className="text-sm font-semibold text-green-900 uppercase tracking-wide">Tribal Ethnomedicine</p>
+              <p className="text-xs text-gray-500">Traditional knowledge from Eastern Odisha</p>
+            </div>
+          </div>
             <div className="space-y-6 text-justify hyphens-auto text-gray-700 leading-relaxed text-lg order-1 md:order-2">
               <p>In the tribal scenario of eastern Odisha, the ethnomedicinal systems have shown a deep understanding of biodiversity, plant identification, preparation methods, dosage standards, and their usage. However, due to the largely oral and embedded nature of such knowledge in the cultural practices of the communities, it is susceptible to deterioration due to socio-economic changes, environmental changes, and the loss of continuity.</p>
               <p>In light of the urgent need to document and preserve such knowledge, an attempt is being made to document and digitize the knowledge in a way that preserves it while maintaining its authenticity and integrity. Ethnographic documentation, authentication of plant species, and documentation of preparation techniques, applications, and traditional stories associated with them are being done systematically. The digital platform is being developed to allow for searching, metadata integration, and long-term preservation in conformity with established data management practices.</p>
