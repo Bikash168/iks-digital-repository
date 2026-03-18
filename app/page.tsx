@@ -688,7 +688,7 @@ export default function Home() {
                   {paginatedData.map((item) => (
                     <tr key={item.vendorNo} className="hover:bg-green-50 border-b border-green-100">
                       <td className="px-4 py-3 font-medium text-green-900">{item.vendorNo}</td>
-                      <td className="px-4 py-3 font-semibold text-gray-800">{item.plantName}</td>
+                      <td className="px-4 py-3 font-semibold text-gray-800 italic">{item.plantName}</td>
                       <td className="px-4 py-3 text-gray-700">{item.family}</td>
                       <td className="px-4 py-3 text-gray-600 text-sm">
                         <div className="flex items-center justify-between gap-2">
