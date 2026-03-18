@@ -525,32 +525,40 @@ export default function Home() {
         </div>
       </section>
 
-      {/* PROJECT DETAILS */}
-      <section id="project" className="py-24 px-6 md:px-16 bg-green-50">
-        <div className="max-w-6xl mx-auto">
+     {/* PROJECT */}
+      <section id="project" className="py-20 sm:py-28 px-5 sm:px-8 lg:px-16 bg-green-50">
+        <div className="max-w-4xl mx-auto">
           <div className="text-center mb-12">
-            <h2 className="text-4xl font-bold text-green-900">Project Details</h2>
-            <div className="w-24 h-1 bg-yellow-500 mx-auto mt-4 rounded-full" />
+            <h2 className="text-3xl sm:text-4xl font-extrabold text-green-900">Project Details</h2>
+            <div className="w-20 h-1 bg-yellow-500 mx-auto mt-4 rounded-full" />
           </div>
-          <div className="bg-white shadow-2xl rounded-3xl p-8 md:p-10 border border-green-200 space-y-6">
-            <div>
-              <h3 className="text-xl font-semibold text-green-800 mb-2">Project Title</h3>
-              <p className="text-gray-700 leading-relaxed">Development of Digital Repository for Documentation of Ethno-medicinal Plants Used by Different Tribal Communities of Eastern Odisha for Holistic Healthcare Management</p>
+          <div className="bg-white shadow-xl rounded-3xl overflow-hidden border border-green-100">
+            <div className="bg-green-900 px-8 py-6">
+              <p className="text-xs font-bold uppercase tracking-widest text-green-300 mb-2">Project Title</p>
+              <p className="text-white text-base sm:text-lg font-semibold leading-snug">
+                Development of Digital Repository for Documentation of Ethno-medicinal Plants Used by Different Tribal Communities of Eastern Odisha for Holistic Healthcare Management
+              </p>
             </div>
-            <hr className="border-green-100" />
-            <div className="grid md:grid-cols-2 gap-8">
-              <div>
-                <h4 className="text-lg font-semibold text-green-900 mb-1">Lead Principal Investigator</h4>
-                <p className="text-gray-700">Dr. Manisha Mohapatra</p>
+            <div className="px-8 py-8 grid sm:grid-cols-2 gap-8">
+              <div className="space-y-1">
+                <p className="text-xs font-bold uppercase tracking-widest text-green-700">Lead Principal Investigator</p>
+                <p className="text-gray-800 font-semibold">Dr. Manisha Mohapatra</p>
+                <p className="text-sm text-gray-500">Biotechnology Department</p>
               </div>
-              <div>
-                <h4 className="text-lg font-semibold text-green-900 mb-1">Co-Principal Investigators</h4>
-                <p className="text-gray-700">Dr. S N Mallick<br />Dr. P Chand</p>
+              <div className="space-y-1">
+                <p className="text-xs font-bold uppercase tracking-widest text-green-700">Co-Principal Investigators</p>
+                <p className="text-gray-800 font-semibold">Dr. S N Mallick</p>
+                <p className="text-gray-800 font-semibold">Dr. P Chand</p>
+              </div>
+              <div className="sm:col-span-2 pt-4 border-t border-green-100">
+                <p className="text-xs font-bold uppercase tracking-widest text-green-700 mb-1">Funding Body</p>
+                <p className="text-gray-700 text-sm">IKS Division, Ministry of Education, Government of India</p>
               </div>
             </div>
           </div>
         </div>
       </section>
+
 
       {/* DATABASE */}
       <section id="database" className="py-16 md:py-20 bg-[#f8f6f1]">
