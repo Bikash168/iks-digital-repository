@@ -846,31 +846,42 @@ export default function Home() {
         </div>
       )}
 
-      {/* GALLERY */}
-      <section id="gallery" className="py-20 px-6 md:px-16 bg-white">
-        <div className="max-w-7xl mx-auto">
-          <div className="text-center mb-12">
-            <h2 className="text-4xl font-bold text-green-900">Gallery</h2>
-            <div className="w-24 h-1 bg-yellow-500 mx-auto mt-4 rounded-full" />
-          </div>
+    {/* GALLERY */}
+<section id="gallery" className="py-20 px-6 md:px-16 bg-white">
+  <div className="max-w-7xl mx-auto">
+    
+    <div className="text-center mb-12">
+      <h2 className="text-4xl font-bold text-green-900">Gallery</h2>
+      <div className="w-24 h-1 bg-yellow-500 mx-auto mt-4 rounded-full" />
+    </div>
 
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
-            {(galleryImages.length ? galleryImages.slice(0, 12) : ["/hero-plant.png"]).map((src, idx) => (
-              <div key={src + idx} className="rounded-2xl overflow-hidden border border-green-100 shadow-sm hover:shadow-md transition-shadow">
-                <img
-                  src={src}
-                  alt="Gallery image"
-                  className="w-full h-40 md:h-44 lg:h-48 object-cover"
-                  onError={(e) => {
-                    const target = e.currentTarget as HTMLImageElement;
-                    target.src = "/hero-plant.png";
-                  }}
-                />
-              </div>
-            ))}
-          </div>
+    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
+      {(galleryImages.length ? galleryImages.slice(0, 12) : ["/hero-plant.png"]).map((src, idx) => (
+        
+        <div
+          key={src + idx}
+          className="rounded-2xl overflow-hidden border border-green-100 shadow-sm hover:shadow-md transition-shadow"
+        >
+          <Image
+            src={src}
+            alt="Gallery image"
+            width={300}
+            height={200}
+            className="w-full h-40 md:h-44 lg:h-48 object-cover"
+            loading="lazy"   // ✅ lazy load
+            quality={60}     // ✅ reduce size
+            placeholder="blur"
+            blurDataURL="/hero-plant.png" // fallback blur
+            onError={(e: any) => {
+              e.currentTarget.src = "/hero-plant.png";
+            }}
+          />
         </div>
-      </section>
+
+      ))}
+    </div>
+  </div>
+</section>
 
       {/* CONTACT */}
       <section id="contact" className="py-24 px-6 md:px-16 bg-green-50">
