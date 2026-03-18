@@ -14,8 +14,6 @@ type Plant = {
 import * as XLSX from "xlsx";
 
 
-
-
 // FIX 1: Single declaration of NAVBAR_HEIGHT as a number (used for scroll offset calculations)
 const NAVBAR_HEIGHT = 130;
 const NAV_SECTIONS = ["home", "about", "project", "database", "gallery", "contact"] as const;
@@ -570,12 +568,14 @@ export default function Home() {
               <div className="space-y-1">
                 <p className="text-xs font-bold uppercase tracking-widest text-green-700">Lead Principal Investigator</p>
                 <p className="text-gray-800 font-semibold">Dr. Manisha Mohapatra</p>
-                <p className="text-sm text-gray-500">Biotechnology Department</p>
+                <p className="text-sm text-gray-500">Trident Academy of Creative Technology</p>
               </div>
               <div className="space-y-1">
                 <p className="text-xs font-bold uppercase tracking-widest text-green-700">Co-Principal Investigators</p>
                 <p className="text-gray-800 font-semibold">Dr. S N Mallick</p>
+                <p className="text-sm text-gray-500">Ravenshwa University</p>
                 <p className="text-gray-800 font-semibold">Dr. P Chand</p>
+                <p className="text-sm text-gray-500">Trident Academy of Technology</p>
               </div>
               <div className="sm:col-span-2 pt-4 border-t border-green-100">
                 <p className="text-xs font-bold uppercase tracking-widest text-green-700 mb-1">Funding Body</p>
