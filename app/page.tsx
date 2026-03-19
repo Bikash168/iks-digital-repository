@@ -953,7 +953,7 @@ export default function Home() {
               built an image amongst the aspiring masses which is worth the quality of education it imparts.
             </p>
             <a
-              href="https://tact.ac.in"
+              href="https://tsbs.ac.in/"
               target="_blank"
               rel="noopener noreferrer"
               className="inline-flex items-center gap-2 text-sm font-semibold text-green-400 hover:text-green-300 transition-colors group"
@@ -1002,16 +1002,7 @@ export default function Home() {
                 </a>
               </li>
 
-              {/* Phone */}
-              <li className="flex items-start gap-4">
-                <span className="mt-1 flex-shrink-0 w-9 h-9 rounded-full bg-green-900/60 border border-green-700 flex items-center justify-center text-green-400 text-base">
-                  📞
-                </span>
-                <span className="text-gray-400 leading-relaxed">
-                  0674-6649003, 6649008, 6649036,<br />
-                  0674-6649043
-                </span>
-              </li>
+           
             </ul>
           </div>
 
