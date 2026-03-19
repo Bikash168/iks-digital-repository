@@ -348,14 +348,14 @@ export default function Home() {
       <nav className="fixed top-0 w-full bg-white shadow-md z-50">
         <div className="max-w-7xl mx-auto flex items-center justify-between px-6 md:px-8 py-3 md:py-4">
           {/* Logo + Title */}
-          <div className="flex items-center gap-4 md:gap-8">
-            <div className="flex items-center gap-4 md:gap-5">
+          <div className="flex flex-col md:flex-row items-center gap-2 md:gap-8 border-b md:border-b-0 md:border-r border-green-200 pb-2 md:pb-0 md:pr-6">
+            <div className="flex flex-col md:flex-row items-center gap-2 md:gap-8 border-b md:border-b-0 md:border-r border-green-200 pb-2 md:pb-0 md:pr-6">
               <Image
                 src="/logo1.png"
                 alt="TACT Logo"
-                width={110}
-                height={110}
-                className="w-14 h-14 md:w-18 md:h-18 lg:w-22 lg:h-22 object-contain"
+                width={90}
+                height={90}
+                className="w-12 h-12 md:w-16 md:h-16 lg:w-20 lg:h-20 object-contain"
               />
               <Image
                 src="/logo2.png"
@@ -372,9 +372,13 @@ export default function Home() {
                 className="w-14 h-14 md:w-18 md:h-18 lg:w-22 lg:h-22 object-contain"
               />
             </div>
-            <div className="hidden md:flex flex-col leading-tight">
-              <span className="text-lg font-bold text-green-900">IKS Digital Repository</span>
-              <span className="text-xs text-green-600">Ethno-medicinal knowledge</span>
+            <div className="flex flex-col leading-tight mt-1 md:mt-0">
+              <span className="text-xs md:text-lg font-bold text-green-900">
+                IKS Digital Repository
+              </span>
+              <span className="text-[10px] md:text-xs text-green-600">
+                Ethno-medicinal knowledge
+              </span>
             </div>
           </div>
 
@@ -403,21 +407,6 @@ export default function Home() {
         {/* Mobile Dropdown Menu */}
         {menuOpen && (
           <div className="md:hidden bg-white border-t border-green-100 shadow-lg px-6 py-4 flex flex-col gap-4 text-[15px] font-semibold">
-            <div className="flex gap-2 overflow-x-auto pb-2">
-              {(galleryImages.length ? galleryImages.slice(0, 5) : ["/hero-plant.png"]).map((src, idx) => (
-                <img
-                  key={idx}
-                  src={src}
-                  alt="Gallery image"
-                  className="h-16 w-16 flex-shrink-0 rounded-lg object-cover border border-green-100"
-                  onError={(e) => {
-                    const target = e.currentTarget as HTMLImageElement;
-                    target.src = "/hero-plant.png";
-                  }}
-                />
-              ))}
-            </div>
-
             <div className="flex flex-col gap-3">
               {navItem("home", "Home")}
               {navItem("about", "About")}
@@ -846,42 +835,42 @@ export default function Home() {
         </div>
       )}
 
-    {/* GALLERY */}
-<section id="gallery" className="py-20 px-6 md:px-16 bg-white">
-  <div className="max-w-7xl mx-auto">
-    
-    <div className="text-center mb-12">
-      <h2 className="text-4xl font-bold text-green-900">Gallery</h2>
-      <div className="w-24 h-1 bg-yellow-500 mx-auto mt-4 rounded-full" />
-    </div>
+      {/* GALLERY */}
+      <section id="gallery" className="py-20 px-6 md:px-16 bg-white">
+        <div className="max-w-7xl mx-auto">
 
-    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
-      {(galleryImages.length ? galleryImages.slice(0, 12) : ["/hero-plant.png"]).map((src, idx) => (
-        
-        <div
-          key={src + idx}
-          className="rounded-2xl overflow-hidden border border-green-100 shadow-sm hover:shadow-md transition-shadow"
-        >
-          <Image
-            src={src}
-            alt="Gallery image"
-            width={300}
-            height={200}
-            className="w-full h-40 md:h-44 lg:h-48 object-cover"
-            loading="lazy"   // ✅ lazy load
-            quality={60}     // ✅ reduce size
-            placeholder="blur"
-            blurDataURL="/hero-plant.png" // fallback blur
-            onError={(e: any) => {
-              e.currentTarget.src = "/hero-plant.png";
-            }}
-          />
+          <div className="text-center mb-12">
+            <h2 className="text-4xl font-bold text-green-900">Gallery</h2>
+            <div className="w-24 h-1 bg-yellow-500 mx-auto mt-4 rounded-full" />
+          </div>
+
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
+            {(galleryImages.length ? galleryImages.slice(0, 12) : ["/hero-plant.png"]).map((src, idx) => (
+
+              <div
+                key={src + idx}
+                className="rounded-2xl overflow-hidden border border-green-100 shadow-sm hover:shadow-md transition-shadow"
+              >
+                <Image
+                  src={src}
+                  alt="Gallery image"
+                  width={300}
+                  height={200}
+                  className="w-full h-40 md:h-44 lg:h-48 object-cover"
+                  loading="lazy"   // ✅ lazy load
+                  quality={60}     // ✅ reduce size
+                  placeholder="blur"
+                  blurDataURL="/hero-plant.png" // fallback blur
+                  onError={(e: any) => {
+                    e.currentTarget.src = "/hero-plant.png";
+                  }}
+                />
+              </div>
+
+            ))}
+          </div>
         </div>
-
-      ))}
-    </div>
-  </div>
-</section>
+      </section>
 
       {/* CONTACT */}
       <section id="contact" className="py-24 px-6 md:px-16 bg-green-50">
@@ -1002,7 +991,7 @@ export default function Home() {
                 </a>
               </li>
 
-           
+
             </ul>
           </div>
 
