@@ -454,10 +454,10 @@ export default function Home() {
           {/* Left — Text */}
           <div className="flex-1 text-left max-w-xl">
             <p className="text-yellow-300 uppercase tracking-[0.25em] text-xs font-semibold mb-4">
-              IKS Division · Ministry of Education · Govt. of India
+              In Collaberation with
             </p>
             <h2 className="text-4xl md:text-5xl font-bold leading-tight mb-4">
-              Indian Knowledge Systems
+              Indian Knowledge Systems (IKS Division) Ministry of Education · Govt. of India
             </h2>
             <div className="w-16 h-1 bg-yellow-400 mb-6 rounded-full" />
             <p className="text-base md:text-lg text-green-100 leading-relaxed">
