@@ -469,7 +469,7 @@ export default function Home() {
           <div className="flex-1 flex justify-center md:justify-end">
             <div className="bg-white rounded-3xl shadow-2xl p-5 w-full max-w-lg">
               <Image
-                src="/hero-plant.png"
+                src="/about-plant.jpg"
                 alt="IKS System Diagram"
                 width={600}
                 height={450}
@@ -511,7 +511,7 @@ export default function Home() {
             <div className="flex justify-center">
               <div className="w-full max-w-lg rounded-2xl overflow-hidden shadow-2xl border border-green-100">
                 <Image
-                  src="/about-plant.jpg"
+                  src="/hero-plant.png"
                   alt="IKS About"
                   width={600}
                   height={400}
