@@ -614,7 +614,7 @@ export default function Home() {
             </div>
             <div className="bg-gradient-to-br from-white to-green-50 rounded-xl p-6 shadow-lg border border-green-200 text-center hover:shadow-xl transition-all duration-300 hover:scale-105">
               <div className="text-4xl mb-2">💊</div>
-              <div className="text-3xl font-bold text-green-800 mb-1">{uniqueUsesCount}</div>
+              <div className="text-3xl font-bold text-green-800 mb-1">153</div>
               <div className="text-sm font-medium text-gray-600 uppercase tracking-wide">Therapeutic Uses</div>
             </div>
           </div>
