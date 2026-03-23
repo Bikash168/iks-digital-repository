@@ -348,47 +348,47 @@ export default function Home() {
       <div className="max-w-7xl mx-auto flex items-center justify-between px-6 md:px-8 py-3 md:py-4">
 
         {/* LEFT SECTION */}
-        <div className="flex flex-col md:flex-row md:items-stretch items-center gap-2 md:gap-6 border-b md:border-b-0 md:border-r border-green-200 pb-2 md:pb-0 md:pr-6">
+<div className="flex flex-col md:flex-row items-center md:items-center gap-2 md:gap-6 pb-2 md:pb-0 md:pr-6 md:border-r border-green-200">
 
-          {/* Logos */}
-          <div className="flex items-center justify-center gap-2 md:gap-4 md:pr-4 md:border-r border-green-200">
-            <Image
-              src="/logo1.png"
-              alt="TACT Logo"
-              width={90}
-              height={90}
-              className="w-10 h-10 md:w-14 md:h-14 lg:w-20 lg:h-20 object-contain"
-            />
-            <Image
-              src="/logo2.png"
-              alt="IKS Logo"
-              width={110}
-              height={110}
-              className="w-11 h-11 md:w-15 md:h-15 lg:w-22 lg:h-22 object-contain"
-            />
-            <Image
-              src="/logo3.svg"
-              alt="Government Logo"
-              width={110}
-              height={110}
-              className="w-11 h-11 md:w-15 md:h-15 lg:w-22 lg:h-22 object-contain"
-            />
-          </div>
+  {/* Logos */}
+  <div className="flex items-center gap-3 md:gap-4 md:pr-4 md:border-r border-green-200">
+    <Image
+      src="/logo1.png"
+      alt="TACT Logo"
+      width={90}
+      height={90}
+      className="w-8 h-8 md:w-14 md:h-14 lg:w-18 lg:h-18 object-contain"
+    />
+    <Image
+      src="/logo2.png"
+      alt="IKS Logo"
+      width={110}
+      height={110}
+      className="w-9 h-9 md:w-15 md:h-15 lg:w-20 lg:h-20 object-contain"
+    />
+    <Image
+      src="/logo3.svg"
+      alt="Government Logo"
+      width={110}
+      height={110}
+      className="w-9 h-9 md:w-15 md:h-15 lg:w-20 lg:h-20 object-contain"
+    />
+  </div>
 
-          {/* Horizontal line (mobile only) */}
-          <div className="w-full border-t border-green-200 md:hidden"></div>
+  {/* Mobile Divider */}
+  <div className="w-full border-t border-green-200 md:hidden"></div>
 
-          {/* Title */}
-          <div className="flex flex-col justify-center items-center md:items-start leading-tight md:pl-4">
-            <span className="text-xs md:text-lg font-bold text-green-900 whitespace-nowrap">
-              IKS Digital Repository
-            </span>
-            <span className="text-[10px] md:text-xs text-green-600 whitespace-nowrap">
-              Ethno-medicinal knowledge
-            </span>
-          </div>
+  {/* Title */}
+  <div className="flex flex-col justify-center md:pl-4 text-center md:text-left">
+    <span className="text-sm md:text-lg font-semibold text-green-900 leading-tight">
+      IKS Digital Repository
+    </span>
+    <span className="text-[11px] md:text-xs text-green-600">
+      Ethno-medicinal knowledge
+    </span>
+  </div>
 
-        </div>
+</div>
 
         {/* DESKTOP MENU */}
         <div className="hidden md:flex items-center gap-10 text-[16px] font-semibold text-green-800">
@@ -401,10 +401,10 @@ export default function Home() {
         </div>
 
         {/* MOBILE HAMBURGER */}
-        <button
-          className="md:hidden flex flex-col gap-1.5 p-2 bg-white rounded-xl border border-green-200 shadow-sm"
-          onClick={() => setMenuOpen((prev) => !prev)}
-        >
+       <button
+  className="md:hidden flex items-center justify-center p-2 rounded-xl border border-green-200 shadow-sm"
+  onClick={() => setMenuOpen((prev) => !prev)}
+>
           <span className={`block w-6 h-0.5 bg-green-800 transition-all ${menuOpen ? "rotate-45 translate-y-2" : ""}`} />
           <span className={`block w-6 h-0.5 bg-green-800 transition-all ${menuOpen ? "opacity-0" : ""}`} />
           <span className={`block w-6 h-0.5 bg-green-800 transition-all ${menuOpen ? "-rotate-45 -translate-y-2" : ""}`} />
