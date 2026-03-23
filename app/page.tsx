@@ -348,40 +348,44 @@ export default function Home() {
       <nav className="fixed top-0 w-full bg-white shadow-md z-50">
         <div className="max-w-7xl mx-auto flex items-center justify-between px-6 md:px-8 py-3 md:py-4">
           {/* Logo + Title */}
-          <div className="flex flex-col md:flex-row items-center gap-2 md:gap-8 border-b md:border-b-0 md:border-r border-green-200 pb-2 md:pb-0 md:pr-6">
-            <div className="flex flex-col md:flex-row items-center gap-2 md:gap-8 border-b md:border-b-0 md:border-r border-green-200 pb-2 md:pb-0 md:pr-6">
-              <Image
-                src="/logo1.png"
-                alt="TACT Logo"
-                width={90}
-                height={90}
-                className="w-12 h-12 md:w-16 md:h-16 lg:w-20 lg:h-20 object-contain"
-              />
-              <Image
-                src="/logo2.png"
-                alt="IKS Logo"
-                width={110}
-                height={110}
-                className="w-14 h-14 md:w-18 md:h-18 lg:w-22 lg:h-22 object-contain"
-              />
-              <Image
-                src="/logo3.svg"
-                alt="Government Logo"
-                width={110}
-                height={110}
-                className="w-14 h-14 md:w-18 md:h-18 lg:w-22 lg:h-22 object-contain"
-              />
-            </div>
-            <div className="flex flex-col leading-tight mt-1 md:mt-0">
-              <span className="text-xs md:text-lg font-bold text-green-900">
-                IKS Digital Repository
-              </span>
-              <span className="text-[10px] md:text-xs text-green-600">
-                Ethno-medicinal knowledge
-              </span>
-            </div>
-          </div>
+<div className="flex items-center border-r border-green-200 pr-4 md:pr-6">
 
+  {/* Logos + inner divider */}
+  <div className="flex items-center gap-2 md:gap-4 pr-3 md:pr-4 border-r border-green-200">
+    <Image
+      src="/logo1.png"
+      alt="TACT Logo"
+      width={90}
+      height={90}
+      className="w-10 h-10 md:w-14 md:h-14 lg:w-20 lg:h-20 object-contain"
+    />
+    <Image
+      src="/logo2.png"
+      alt="IKS Logo"
+      width={110}
+      height={110}
+      className="w-11 h-11 md:w-15 md:h-15 lg:w-22 lg:h-22 object-contain"
+    />
+    <Image
+      src="/logo3.svg"
+      alt="Government Logo"
+      width={110}
+      height={110}
+      className="w-11 h-11 md:w-15 md:h-15 lg:w-22 lg:h-22 object-contain"
+    />
+  </div>
+
+  {/* Text */}
+  <div className="flex flex-col leading-tight pl-3 md:pl-4">
+    <span className="text-xs md:text-lg font-bold text-green-900 whitespace-nowrap">
+      IKS Digital Repository
+    </span>
+    <span className="text-[10px] md:text-xs text-green-600 whitespace-nowrap">
+      Ethno-medicinal knowledge
+    </span>
+  </div>
+
+</div>
           {/* Desktop Menu */}
           <div className="hidden md:flex items-center gap-10 text-[16px] font-semibold text-green-800">
             {navItem("home", "Home")}
