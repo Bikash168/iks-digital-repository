@@ -344,84 +344,86 @@ export default function Home() {
   return (
     <main className="font-serif bg-[#f8f6f1]">
 
-      {/* NAVBAR */}
-      <nav className="fixed top-0 w-full bg-white shadow-md z-50">
-        <div className="max-w-7xl mx-auto flex items-center justify-between px-6 md:px-8 py-3 md:py-4">
-          {/* Logo + Title */}
-<div className="flex items-center border-r border-green-200 pr-4 md:pr-6">
+    {/* NAVBAR */}
+<nav className="fixed top-0 w-full bg-white shadow-md z-50">
+  <div className="max-w-7xl mx-auto flex items-center justify-between px-6 md:px-8 py-3 md:py-4">
 
-  {/* Logos + inner divider */}
-  <div className="flex items-center gap-2 md:gap-4 pr-3 md:pr-4 border-r border-green-200">
-    <Image
-      src="/logo1.png"
-      alt="TACT Logo"
-      width={90}
-      height={90}
-      className="w-10 h-10 md:w-14 md:h-14 lg:w-20 lg:h-20 object-contain"
-    />
-    <Image
-      src="/logo2.png"
-      alt="IKS Logo"
-      width={110}
-      height={110}
-      className="w-11 h-11 md:w-15 md:h-15 lg:w-22 lg:h-22 object-contain"
-    />
-    <Image
-      src="/logo3.svg"
-      alt="Government Logo"
-      width={110}
-      height={110}
-      className="w-11 h-11 md:w-15 md:h-15 lg:w-22 lg:h-22 object-contain"
-    />
+    {/* LEFT SECTION (Logos + Title) */}
+    <div className="flex flex-col md:flex-row items-center gap-2 md:gap-6 border-b md:border-b-0 md:border-r border-green-200 pb-2 md:pb-0 md:pr-6">
+
+      {/* Logos */}
+      <div className="flex items-center justify-center gap-2 md:gap-4">
+        <Image
+          src="/logo1.png"
+          alt="TACT Logo"
+          width={90}
+          height={90}
+          className="w-10 h-10 md:w-14 md:h-14 lg:w-20 lg:h-20 object-contain"
+        />
+        <Image
+          src="/logo2.png"
+          alt="IKS Logo"
+          width={110}
+          height={110}
+          className="w-11 h-11 md:w-15 md:h-15 lg:w-22 lg:h-22 object-contain"
+        />
+        <Image
+          src="/logo3.svg"
+          alt="Government Logo"
+          width={110}
+          height={110}
+          className="w-11 h-11 md:w-15 md:h-15 lg:w-22 lg:h-22 object-contain"
+        />
+      </div>
+
+      {/* Horizontal line (Mobile only) */}
+      <div className="w-full border-t border-green-200 md:hidden"></div>
+
+      {/* Title */}
+      <div className="flex flex-col items-center md:items-start leading-tight">
+        <span className="text-xs md:text-lg font-bold text-green-900">
+          IKS Digital Repository
+        </span>
+        <span className="text-[10px] md:text-xs text-green-600">
+          Ethno-medicinal knowledge
+        </span>
+      </div>
+    </div>
+
+    {/* DESKTOP MENU */}
+    <div className="hidden md:flex items-center gap-10 text-[16px] font-semibold text-green-800">
+      {navItem("home", "Home")}
+      {navItem("about", "About")}
+      {navItem("project", "Project")}
+      {navItem("database", "Database")}
+      {navItem("gallery", "Gallery")}
+      {navItem("contact", "Contact")}
+    </div>
+
+    {/* MOBILE HAMBURGER */}
+    <button
+      className="md:hidden flex flex-col gap-1.5 p-2 bg-white rounded-xl border border-green-200 shadow-sm"
+      onClick={() => setMenuOpen((prev) => !prev)}
+    >
+      <span className={`block w-6 h-0.5 bg-green-800 ${menuOpen ? "rotate-45 translate-y-2" : ""}`} />
+      <span className={`block w-6 h-0.5 bg-green-800 ${menuOpen ? "opacity-0" : ""}`} />
+      <span className={`block w-6 h-0.5 bg-green-800 ${menuOpen ? "-rotate-45 -translate-y-2" : ""}`} />
+    </button>
+
   </div>
 
-  {/* Text */}
-  <div className="flex flex-col leading-tight pl-3 md:pl-4">
-    <span className="text-xs md:text-lg font-bold text-green-900 whitespace-nowrap">
-      IKS Digital Repository
-    </span>
-    <span className="text-[10px] md:text-xs text-green-600 whitespace-nowrap">
-      Ethno-medicinal knowledge
-    </span>
-  </div>
-
-</div>
-          {/* Desktop Menu */}
-          <div className="hidden md:flex items-center gap-10 text-[16px] font-semibold text-green-800">
-            {navItem("home", "Home")}
-            {navItem("about", "About")}
-            {navItem("project", "Project")}
-            {navItem("database", "Database")}
-            {navItem("gallery", "Gallery")}
-            {navItem("contact", "Contact")}
-          </div>
-
-          {/* Mobile Hamburger */}
-          <button
-            className="md:hidden flex flex-col gap-1.5 p-2 bg-white rounded-xl border border-green-200 shadow-sm"
-            onClick={() => setMenuOpen((prev) => !prev)}
-            aria-label="Toggle menu"
-          >
-            <span className={`block w-6 h-0.5 bg-green-800 transition-all ${menuOpen ? "rotate-45 translate-y-2" : ""}`} />
-            <span className={`block w-6 h-0.5 bg-green-800 transition-all ${menuOpen ? "opacity-0" : ""}`} />
-            <span className={`block w-6 h-0.5 bg-green-800 transition-all ${menuOpen ? "-rotate-45 -translate-y-2" : ""}`} />
-          </button>
-        </div>
-
-        {/* Mobile Dropdown Menu */}
-        {menuOpen && (
-          <div className="md:hidden bg-white border-t border-green-100 shadow-lg px-6 py-4 flex flex-col gap-4 text-[15px] font-semibold">
-            <div className="flex flex-col gap-3">
-              {navItem("home", "Home")}
-              {navItem("about", "About")}
-              {navItem("project", "Project")}
-              {navItem("database", "Database")}
-              {navItem("gallery", "Gallery")}
-              {navItem("contact", "Contact")}
-            </div>
-          </div>
-        )}
-      </nav>
+  {/* MOBILE MENU */}
+  {menuOpen && (
+    <div className="md:hidden bg-white border-t border-green-100 shadow-lg px-6 py-4 flex flex-col gap-4 text-[15px] font-semibold">
+      {navItem("home", "Home")}
+      {navItem("about", "About")}
+      {navItem("project", "Project")}
+      {navItem("database", "Database")}
+      {navItem("gallery", "Gallery")}
+      {navItem("contact", "Contact")}
+    </div>
+  )}
+</nav>
 
       {/* HERO */}
       <section
