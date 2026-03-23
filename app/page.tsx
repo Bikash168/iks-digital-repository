@@ -568,7 +568,7 @@ export default function Home() {
               <div className="space-y-1">
                 <p className="text-xs font-bold uppercase tracking-widest text-green-700">Co-Principal Investigators</p>
                 <p className="text-gray-800 font-semibold">Dr. S N Mallick</p>
-                <p className="text-sm text-gray-500">Ravenshwa University</p>
+                <p className="text-sm text-gray-500">Ravenshaw University</p>
                 <p className="text-gray-800 font-semibold">Dr. P Chand</p>
                 <p className="text-sm text-gray-500">Trident Academy of Technology</p>
               </div>
