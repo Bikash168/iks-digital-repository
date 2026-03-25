@@ -4,9 +4,8 @@
 // FILE: app/admin/page.tsx
 // ─────────────────────────────────────────────────────────────
 
-import { useState, useRef, useCallback } from "react";
+import { useState, useRef, useCallback, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import * as XLSX from "xlsx";
 
 // ─── Types ────────────────────────────────────────────────────
 
@@ -26,7 +25,8 @@ type ImageSlot = {
   preview: string | null;
   label: string;
   icon: string;
-  suffix: string; // "" for field photo, "_Herbarium" for herbarium
+  fieldKey: "fieldPhoto" | "herbariumPhoto";
+  suffix: string;
 };
 
 const EMPTY_FORM: PlantForm = {
@@ -48,14 +48,14 @@ const FIELDS: {
   textarea?: boolean;
   icon: string;
 }[] = [
-  { key: "vendorNo",       label: "Voucher No.",      placeholder: "e.g. TACT-001",                     required: true,  icon: "🔖" },
-  { key: "plantName",      label: "Plant Name",        placeholder: "Scientific name (italic)",           required: true,  icon: "🌿" },
-  { key: "family",         label: "Family",            placeholder: "e.g. Fabaceae",                     required: true,  icon: "🏷️" },
-  { key: "localName",      label: "Local Name",        placeholder: "Local / common name",               required: false, icon: "🗣️" },
-  { key: "habitat",        label: "Habitat",           placeholder: "e.g. Moist deciduous forest",      required: false, icon: "🌍" },
-  { key: "collectionArea", label: "Collection Area",   placeholder: "District / village / coordinates",  required: false, icon: "📍" },
-  { key: "plantPartsUsed", label: "Plant Parts Used",  placeholder: "e.g. Leaves, Bark, Root",          required: false, icon: "✂️" },
-  { key: "therapeuticUse", label: "Therapeutic Use",   placeholder: "Describe the medicinal uses…",     required: true,  textarea: true, icon: "🩺" },
+  { key: "vendorNo",       label: "Voucher No.",      placeholder: "e.g. TACT-001",                    required: true,  icon: "🔖" },
+  { key: "plantName",      label: "Plant Name",        placeholder: "Scientific name",                  required: true,  icon: "🌿" },
+  { key: "family",         label: "Family",            placeholder: "e.g. Fabaceae",                    required: true,  icon: "🏷️" },
+  { key: "localName",      label: "Local Name",        placeholder: "Local / common name",              required: false, icon: "🗣️" },
+  { key: "habitat",        label: "Habitat",           placeholder: "e.g. Moist deciduous forest",     required: false, icon: "🌍" },
+  { key: "collectionArea", label: "Collection Area",   placeholder: "District / village / coordinates", required: false, icon: "📍" },
+  { key: "plantPartsUsed", label: "Plant Parts Used",  placeholder: "e.g. Leaves, Bark, Root",         required: false, icon: "✂️" },
+  { key: "therapeuticUse", label: "Therapeutic Use",   placeholder: "Describe the medicinal uses…",    required: true,  textarea: true, icon: "🩺" },
 ];
 
 // ─── Drag-and-drop image uploader ────────────────────────────
@@ -84,13 +84,11 @@ function ImageUploader({
     if (file) handleFile(file);
   }, []);
 
-  const onDragOver = (e: React.DragEvent) => { e.preventDefault(); setDragging(true); };
-  const onDragLeave = () => setDragging(false);
-
   return (
     <div className="flex flex-col gap-2">
       <label className="text-xs font-bold uppercase tracking-widest text-green-800 flex items-center gap-1.5">
         <span>{slot.icon}</span> {slot.label}
+        <span className="text-gray-400 font-normal normal-case tracking-normal ml-1">(optional)</span>
       </label>
 
       {slot.preview ? (
@@ -122,8 +120,8 @@ function ImageUploader({
       ) : (
         <div
           onDrop={onDrop}
-          onDragOver={onDragOver}
-          onDragLeave={onDragLeave}
+          onDragOver={(e) => { e.preventDefault(); setDragging(true); }}
+          onDragLeave={() => setDragging(false)}
           onClick={() => inputRef.current?.click()}
           className={`relative rounded-xl border-2 border-dashed cursor-pointer transition-all flex flex-col items-center justify-center gap-3 select-none
             ${dragging
@@ -132,8 +130,10 @@ function ImageUploader({
             }`}
           style={{ height: "200px" }}
         >
-          <div className={`w-14 h-14 rounded-full flex items-center justify-center text-3xl transition-transform ${dragging ? "scale-110" : ""}`}
-            style={{ background: "linear-gradient(135deg, #d1fae5, #bbf7d0)" }}>
+          <div
+            className={`w-14 h-14 rounded-full flex items-center justify-center text-3xl transition-transform ${dragging ? "scale-110" : ""}`}
+            style={{ background: "linear-gradient(135deg, #d1fae5, #bbf7d0)" }}
+          >
             {slot.icon}
           </div>
           <div className="text-center px-4">
@@ -175,9 +175,11 @@ function Toast({ message, type, onClose }: {
   const icons = { success: "✅", error: "❌", info: "ℹ️" };
 
   return (
-    <div className={`fixed bottom-6 left-1/2 -translate-x-1/2 z-50 flex items-center gap-3 px-5 py-3.5 rounded-2xl shadow-2xl text-sm font-semibold ${colors[type]} animate-bounce-once`}
-      style={{ minWidth: "280px", maxWidth: "90vw" }}>
-      <span className="text-lg">{icons[type]}</span>
+    <div
+      className={`fixed bottom-6 left-1/2 -translate-x-1/2 z-50 flex items-center gap-3 px-5 py-3.5 rounded-2xl shadow-2xl text-sm font-semibold ${colors[type]}`}
+      style={{ minWidth: "300px", maxWidth: "92vw" }}
+    >
+      <span className="text-lg shrink-0">{icons[type]}</span>
       <span className="flex-1">{message}</span>
       <button onClick={onClose} className="ml-2 opacity-70 hover:opacity-100 text-lg leading-none">✕</button>
     </div>
@@ -188,15 +190,33 @@ function Toast({ message, type, onClose }: {
 
 export default function AdminPage() {
   const router = useRouter();
-  const [form, setForm] = useState<PlantForm>(EMPTY_FORM);
-  const [images, setImages] = useState<ImageSlot[]>([
-    { file: null, preview: null, label: "Field Photo",     icon: "📷", suffix: ""           },
-    { file: null, preview: null, label: "Herbarium Sheet", icon: "🌿", suffix: "_Herbarium" },
+
+  // ── Auth guard ───────────────────────────────────────────────
+  const [authChecked, setAuthChecked] = useState(false);
+
+  useEffect(() => {
+    if (sessionStorage.getItem("iks_auth") !== "1") {
+      router.replace("/login");
+    } else {
+      setAuthChecked(true);
+    }
+  }, []);
+
+  function handleLogout() {
+    sessionStorage.removeItem("iks_auth");
+    router.push("/login");
+  }
+
+  // ── Form state ───────────────────────────────────────────────
+  const [form, setForm]             = useState<PlantForm>(EMPTY_FORM);
+  const [images, setImages]         = useState<ImageSlot[]>([
+    { file: null, preview: null, label: "Field Photo",     icon: "📷", fieldKey: "fieldPhoto",     suffix: ""           },
+    { file: null, preview: null, label: "Herbarium Sheet", icon: "🌿", fieldKey: "herbariumPhoto", suffix: "_Herbarium" },
   ]);
   const [submitting, setSubmitting] = useState(false);
-  const [toast, setToast] = useState<{ message: string; type: "success" | "error" | "info" } | null>(null);
-  const [submitted, setSubmitted] = useState<PlantForm | null>(null);
-  const [errors, setErrors] = useState<Partial<Record<keyof PlantForm, string>>>({});
+  const [toast, setToast]           = useState<{ message: string; type: "success" | "error" | "info" } | null>(null);
+  const [lastAdded, setLastAdded]   = useState<PlantForm | null>(null);
+  const [errors, setErrors]         = useState<Partial<Record<keyof PlantForm, string>>>({});
 
   function setField(key: keyof PlantForm, val: string) {
     setForm((f) => ({ ...f, [key]: val }));
@@ -209,9 +229,9 @@ export default function AdminPage() {
 
   function validate(): boolean {
     const errs: Partial<Record<keyof PlantForm, string>> = {};
-    if (!form.vendorNo.trim())       errs.vendorNo      = "Voucher No. is required";
-    if (!form.plantName.trim())      errs.plantName     = "Plant Name is required";
-    if (!form.family.trim())         errs.family        = "Family is required";
+    if (!form.vendorNo.trim())       errs.vendorNo       = "Voucher No. is required";
+    if (!form.plantName.trim())      errs.plantName      = "Plant Name is required";
+    if (!form.family.trim())         errs.family         = "Family is required";
     if (!form.therapeuticUse.trim()) errs.therapeuticUse = "Therapeutic Use is required";
     setErrors(errs);
     return Object.keys(errs).length === 0;
@@ -219,13 +239,10 @@ export default function AdminPage() {
 
   function showToast(message: string, type: "success" | "error" | "info") {
     setToast({ message, type });
-    setTimeout(() => setToast(null), 4000);
+    setTimeout(() => setToast(null), 5000);
   }
 
-  // ── Download images as ZIP instructions ────────────────────
-  // Since we can't write to the server directly, we:
-  // 1. Trigger individual image downloads named correctly
-  // 2. Append row to Data.xlsx and trigger download
+  // ── Submit → POST multipart to /api/plants ───────────────────
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!validate()) {
@@ -236,85 +253,49 @@ export default function AdminPage() {
     setSubmitting(true);
 
     try {
-      // ── Step 1: Fetch existing Excel, append row ──────────
-      let workbook: XLSX.WorkBook;
-      try {
-        const res = await fetch("/Data.xlsx");
-        const buf = await res.arrayBuffer();
-        workbook = XLSX.read(buf, { type: "array" });
-      } catch {
-        // If no existing file, create fresh workbook
-        workbook = XLSX.utils.book_new();
-        const ws = XLSX.utils.aoa_to_sheet([[
-          "Voucher No.", "Plant Name", "Family", "Therapeutic Use",
-          "Local Name", "Habitat", "Collection Area", "Plant Parts Used", "Photo"
-        ]]);
-        XLSX.utils.book_append_sheet(workbook, ws, "Plants");
-      }
+      const fd = new FormData();
+      fd.append("vendorNo",       form.vendorNo);
+      fd.append("plantName",      form.plantName);
+      fd.append("family",         form.family);
+      fd.append("therapeuticUse", form.therapeuticUse);
+      fd.append("localName",      form.localName);
+      fd.append("habitat",        form.habitat);
+      fd.append("collectionArea", form.collectionArea);
+      fd.append("plantPartsUsed", form.plantPartsUsed);
 
-      const sheetName = workbook.SheetNames[0];
-      const ws = workbook.Sheets[sheetName];
-
-      // Derive the photo filename from plant name
-      const safePhotoName = form.plantName.trim().replace(/[/\\?%*:|"<>]/g, "_");
-
-      // Append row
-      const newRow = [
-        form.vendorNo.trim(),
-        form.plantName.trim(),
-        form.family.trim(),
-        form.therapeuticUse.trim(),
-        form.localName.trim(),
-        form.habitat.trim(),
-        form.collectionArea.trim(),
-        form.plantPartsUsed.trim(),
-        safePhotoName, // Photo column — filename without extension
-      ];
-      XLSX.utils.sheet_add_aoa(ws, [newRow], { origin: -1 });
-
-      // Download updated Excel
-      const xlsxBuf = XLSX.write(workbook, { type: "array", bookType: "xlsx" });
-      const xlsxBlob = new Blob([xlsxBuf], { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" });
-      const xlsxUrl = URL.createObjectURL(xlsxBlob);
-      const xlsxA = document.createElement("a");
-      xlsxA.href = xlsxUrl;
-      xlsxA.download = "Data.xlsx";
-      xlsxA.click();
-      URL.revokeObjectURL(xlsxUrl);
-
-      // ── Step 2: Download each image with correct filename ─
       for (const slot of images) {
-        if (!slot.file || !slot.preview) continue;
-
-        const ext = slot.file.name.split(".").pop() ?? "jpg";
-        const filename = `${safePhotoName}${slot.suffix}.${ext}`;
-
-        // Convert dataURL → blob → download
-        const res = await fetch(slot.preview);
-        const blob = await res.blob();
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement("a");
-        a.href = url;
-        a.download = filename;
-        a.click();
-        URL.revokeObjectURL(url);
-
-        // Small delay between downloads so browser doesn't block
-        await new Promise((r) => setTimeout(r, 300));
+        if (slot.file) fd.append(slot.fieldKey, slot.file);
       }
 
-      setSubmitted(form);
+      const res = await fetch("/api/plants", { method: "POST", body: fd });
+
+      // Safely parse response — guard against HTML error pages (404/500)
+      const contentType = res.headers.get("content-type") ?? "";
+      if (!contentType.includes("application/json")) {
+        const text = await res.text();
+        console.error("Non-JSON response from /api/plants:", text.slice(0, 300));
+        throw new Error(
+          res.status === 404
+            ? "API route not found. Make sure app/api/plants/route.ts exists and the dev server was restarted."
+            : `Server returned ${res.status}. Check the terminal for errors.`
+        );
+      }
+
+      const json = await res.json();
+      if (!res.ok) throw new Error(json.error ?? `Server error ${res.status}`);
+
+      setLastAdded(form);
       setForm(EMPTY_FORM);
       setImages([
-        { file: null, preview: null, label: "Field Photo",     icon: "📷", suffix: ""           },
-        { file: null, preview: null, label: "Herbarium Sheet", icon: "🌿", suffix: "_Herbarium" },
+        { file: null, preview: null, label: "Field Photo",     icon: "📷", fieldKey: "fieldPhoto",     suffix: ""           },
+        { file: null, preview: null, label: "Herbarium Sheet", icon: "🌿", fieldKey: "herbariumPhoto", suffix: "_Herbarium" },
       ]);
       setErrors({});
-      showToast("Plant record saved! Move downloaded files to /public/plants/", "success");
+      showToast(`"${form.plantName}" saved to database!`, "success");
 
-    } catch (err) {
+    } catch (err: any) {
       console.error(err);
-      showToast("Something went wrong. Please try again.", "error");
+      showToast(err.message ?? "Something went wrong. Please try again.", "error");
     } finally {
       setSubmitting(false);
     }
@@ -323,14 +304,28 @@ export default function AdminPage() {
   function resetAll() {
     setForm(EMPTY_FORM);
     setImages([
-      { file: null, preview: null, label: "Field Photo",     icon: "📷", suffix: ""           },
-      { file: null, preview: null, label: "Herbarium Sheet", icon: "🌿", suffix: "_Herbarium" },
+      { file: null, preview: null, label: "Field Photo",     icon: "📷", fieldKey: "fieldPhoto",     suffix: ""           },
+      { file: null, preview: null, label: "Herbarium Sheet", icon: "🌿", fieldKey: "herbariumPhoto", suffix: "_Herbarium" },
     ]);
     setErrors({});
-    setSubmitted(null);
+    setLastAdded(null);
   }
 
-  const hasImages = images.some((s) => s.file !== null);
+  const hasImages  = images.some((s) => s.file !== null);
+  const formFilled = !!(form.vendorNo && form.plantName && form.family && form.therapeuticUse);
+
+  if (!authChecked) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-green-950">
+        <div className="flex flex-col items-center gap-4 text-green-300">
+          <svg className="w-10 h-10 animate-spin" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" d="M12 3v3m0 12v3m9-9h-3M6 12H3" />
+          </svg>
+          <span className="text-sm font-medium tracking-wide">Verifying session…</span>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="font-serif min-h-screen bg-[#f4f7f4]">
@@ -338,6 +333,7 @@ export default function AdminPage() {
       {/* ── NAV ──────────────────────────────────────────────── */}
       <nav className="sticky top-0 z-40 bg-green-950 shadow-lg border-b border-green-800">
         <div className="max-w-5xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between gap-4">
+
           <button
             onClick={() => router.push("/")}
             className="flex items-center gap-2 text-green-300 hover:text-white font-semibold text-sm transition-colors group"
@@ -356,15 +352,28 @@ export default function AdminPage() {
             </div>
           </div>
 
-          <button
-            onClick={() => router.push("/database")}
-            className="flex items-center gap-1.5 px-3 py-1.5 bg-green-700 hover:bg-green-600 text-white rounded-lg text-xs font-semibold transition-colors"
-          >
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 10h16M4 14h16M4 18h16" />
-            </svg>
-            <span className="hidden sm:inline">View Database</span>
-          </button>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => router.push("/database")}
+              className="flex items-center gap-1.5 px-3 py-1.5 bg-green-700 hover:bg-green-600 text-white rounded-lg text-xs font-semibold transition-colors"
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 10h16M4 14h16M4 18h16" />
+              </svg>
+              <span className="hidden sm:inline">View Database</span>
+            </button>
+
+            <button
+              onClick={handleLogout}
+              className="flex items-center gap-1.5 px-3 py-1.5 bg-red-700/80 hover:bg-red-600 text-white rounded-lg text-xs font-semibold transition-colors"
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+              </svg>
+              <span className="hidden sm:inline">Logout</span>
+            </button>
+          </div>
+
         </div>
       </nav>
 
@@ -379,22 +388,28 @@ export default function AdminPage() {
               <p className="text-green-400 text-xs font-bold uppercase tracking-[0.2em] mb-1">IKS Digital Repository</p>
               <h1 className="text-2xl sm:text-3xl font-bold text-white leading-tight">Add New Plant Record</h1>
               <p className="text-green-300 text-sm mt-2 max-w-xl leading-relaxed">
-                Fill in the plant details and upload photos. The system will generate a
-                properly named Excel row and image files ready to place in{" "}
-                <code className="bg-green-800/60 px-1.5 py-0.5 rounded text-green-200 text-xs">/public/plants/</code>.
+                Fill in the plant details and upload photos. Data is saved directly to
+                <code className="bg-green-800/60 px-1.5 py-0.5 rounded text-green-200 text-xs mx-1">Data.xlsx</code>
+                and images to
+                <code className="bg-green-800/60 px-1.5 py-0.5 rounded text-green-200 text-xs mx-1">/public/plants/</code>
+                on the server.
               </p>
             </div>
           </div>
 
-          {/* Steps indicator */}
+          {/* Progress steps */}
           <div className="mt-8 flex items-center gap-0 flex-wrap sm:flex-nowrap">
-            {["Fill Plant Details", "Upload Photos", "Download & Save Files"].map((step, i) => (
-              <div key={step} className="flex items-center">
-                <div className="flex items-center gap-2 bg-green-800/50 border border-green-700/40 rounded-lg px-3 py-2">
-                  <span className="w-5 h-5 rounded-full bg-green-500 text-white text-[11px] font-bold flex items-center justify-center shrink-0">
-                    {i + 1}
+            {[
+              { label: "Fill Plant Details", done: formFilled  },
+              { label: "Upload Photos",      done: hasImages   },
+              { label: "Submit to Database", done: !!lastAdded },
+            ].map(({ label, done }, i) => (
+              <div key={label} className="flex items-center">
+                <div className={`flex items-center gap-2 border rounded-lg px-3 py-2 transition-colors ${done ? "bg-green-600/40 border-green-500/50" : "bg-green-800/50 border-green-700/40"}`}>
+                  <span className={`w-5 h-5 rounded-full text-white text-[11px] font-bold flex items-center justify-center shrink-0 transition-colors ${done ? "bg-green-400" : "bg-green-600"}`}>
+                    {done ? "✓" : i + 1}
                   </span>
-                  <span className="text-green-200 text-xs font-medium whitespace-nowrap">{step}</span>
+                  <span className="text-green-200 text-xs font-medium whitespace-nowrap">{label}</span>
                 </div>
                 {i < 2 && <div className="w-6 h-px bg-green-700 shrink-0" />}
               </div>
@@ -407,23 +422,31 @@ export default function AdminPage() {
       <div className="max-w-5xl mx-auto px-4 sm:px-6 py-8 space-y-6">
 
         {/* Success banner */}
-        {submitted && (
+        {lastAdded && (
           <div className="bg-green-50 border border-green-200 rounded-2xl p-5 flex flex-col sm:flex-row items-start sm:items-center gap-4 shadow-sm">
             <div className="w-12 h-12 rounded-full bg-green-100 flex items-center justify-center text-2xl shrink-0">✅</div>
             <div className="flex-1">
-              <p className="font-bold text-green-900 text-sm">Record submitted successfully!</p>
+              <p className="font-bold text-green-900 text-sm">Record saved to server!</p>
               <p className="text-green-700 text-xs mt-0.5">
-                <span className="font-semibold italic">{submitted.plantName}</span> ({submitted.vendorNo}) — Excel and images downloaded.
-                Move images to <code className="bg-green-100 px-1 rounded">/public/plants/</code> and replace{" "}
-                <code className="bg-green-100 px-1 rounded">/public/Data.xlsx</code> on your server.
+                <span className="italic font-semibold">{lastAdded.plantName}</span> ({lastAdded.vendorNo}) has been
+                written to <code className="bg-green-100 px-1 rounded">Data.xlsx</code> and images saved to{" "}
+                <code className="bg-green-100 px-1 rounded">/public/plants/</code>. It will appear in the database immediately.
               </p>
             </div>
-            <button
-              onClick={resetAll}
-              className="shrink-0 px-4 py-2 bg-green-800 hover:bg-green-700 text-white rounded-xl text-xs font-bold transition"
-            >
-              Add Another
-            </button>
+            <div className="flex gap-2 shrink-0">
+              <button
+                onClick={() => router.push("/database")}
+                className="px-4 py-2 bg-green-700 hover:bg-green-600 text-white rounded-xl text-xs font-bold transition"
+              >
+                View Database
+              </button>
+              <button
+                onClick={resetAll}
+                className="px-4 py-2 bg-green-800 hover:bg-green-700 text-white rounded-xl text-xs font-bold transition"
+              >
+                Add Another
+              </button>
+            </div>
           </div>
         )}
 
@@ -441,7 +464,7 @@ export default function AdminPage() {
 
             <div className="p-6 grid grid-cols-1 sm:grid-cols-2 gap-5">
               {FIELDS.filter(f => !f.textarea).map((field) => (
-                <div key={field.key} className={field.key === "therapeuticUse" ? "sm:col-span-2" : ""}>
+                <div key={field.key}>
                   <label className="block text-xs font-bold uppercase tracking-widest text-green-800 mb-1.5">
                     <span className="mr-1">{field.icon}</span>
                     {field.label}
@@ -466,7 +489,6 @@ export default function AdminPage() {
                 </div>
               ))}
 
-              {/* Textarea for therapeutic use */}
               {FIELDS.filter(f => f.textarea).map((field) => (
                 <div key={field.key} className="sm:col-span-2">
                   <label className="block text-xs font-bold uppercase tracking-widest text-green-800 mb-1.5">
@@ -501,7 +523,7 @@ export default function AdminPage() {
               <span className="text-xl">🖼️</span>
               <div>
                 <h2 className="text-white font-bold text-sm">Plant Photography</h2>
-                <p className="text-green-300 text-[11px]">Upload field photo and/or herbarium sheet — optional but recommended</p>
+                <p className="text-green-300 text-[11px]">Upload field photo and/or herbarium sheet — saved directly to server</p>
               </div>
             </div>
 
@@ -515,27 +537,31 @@ export default function AdminPage() {
               ))}
             </div>
 
-            {/* Naming convention notice */}
-            <div className="mx-6 mb-6 bg-amber-50 border border-amber-200 rounded-xl p-4 flex gap-3">
-              <span className="text-lg shrink-0">💡</span>
-              <div className="text-xs text-amber-800 leading-relaxed">
-                <p className="font-bold mb-1">Auto-naming convention</p>
-                <p>Images will be downloaded as:</p>
-                <ul className="mt-1 space-y-0.5 font-mono">
-                  <li className="bg-amber-100 rounded px-2 py-0.5">
-                    {form.plantName.trim()
-                      ? `${form.plantName.trim().replace(/[/\\?%*:|"<>]/g, "_")}.jpg`
-                      : "<Plant Name>.jpg"} <span className="text-amber-600 font-sans">(field photo)</span>
-                  </li>
-                  <li className="bg-amber-100 rounded px-2 py-0.5">
-                    {form.plantName.trim()
-                      ? `${form.plantName.trim().replace(/[/\\?%*:|"<>]/g, "_")}_Herbarium.jpg`
-                      : "<Plant Name>_Herbarium.jpg"} <span className="text-amber-600 font-sans">(herbarium)</span>
-                  </li>
-                </ul>
-                <p className="mt-1.5 text-amber-700">Place these in <code className="bg-amber-200 px-1 rounded">/public/plants/</code> on your server.</p>
+            {form.plantName.trim() && (
+              <div className="mx-6 mb-6 bg-amber-50 border border-amber-200 rounded-xl p-4 flex gap-3">
+                <span className="text-lg shrink-0">💡</span>
+                <div className="text-xs text-amber-800 leading-relaxed">
+                  <p className="font-bold mb-1.5">Files will be saved as:</p>
+                  <div className="space-y-1 font-mono text-[11px]">
+                    <div className="bg-amber-100 rounded px-2 py-1.5 flex items-center gap-2">
+                      <span>📁</span>
+                      <span>/public/plants/<strong>{form.plantName.trim().replace(/[/\\?%*:|"<>]/g, "_")}</strong>.jpg</span>
+                      <span className="font-sans text-amber-500 ml-auto">field photo</span>
+                    </div>
+                    <div className="bg-amber-100 rounded px-2 py-1.5 flex items-center gap-2">
+                      <span>📁</span>
+                      <span>/public/plants/<strong>{form.plantName.trim().replace(/[/\\?%*:|"<>]/g, "_")}_Herbarium</strong>.jpg</span>
+                      <span className="font-sans text-amber-500 ml-auto">herbarium</span>
+                    </div>
+                    <div className="bg-amber-100 rounded px-2 py-1.5 flex items-center gap-2">
+                      <span>📊</span>
+                      <span>/public/<strong>Data.xlsx</strong></span>
+                      <span className="font-sans text-amber-500 ml-auto">updated in-place</span>
+                    </div>
+                  </div>
+                </div>
               </div>
-            </div>
+            )}
           </div>
 
           {/* ── ACTION ROW ──────────────────────────────────── */}
@@ -544,94 +570,57 @@ export default function AdminPage() {
             <button
               type="button"
               onClick={resetAll}
-              className="w-full sm:w-auto order-2 sm:order-1 px-6 py-3 border-2 border-gray-200 text-gray-600 hover:border-red-300 hover:text-red-600 rounded-xl text-sm font-semibold transition-colors"
+              disabled={submitting}
+              className="w-full sm:w-auto order-2 sm:order-1 px-6 py-3 border-2 border-gray-200 text-gray-600 hover:border-red-300 hover:text-red-600 rounded-xl text-sm font-semibold transition-colors disabled:opacity-40"
             >
               Clear Form
             </button>
 
-            {/* Download summary */}
             <div className="flex-1 order-3 sm:order-2 hidden sm:flex items-center gap-4 justify-center">
-              <div className="flex items-center gap-2 text-xs text-gray-500">
-                <span className={`w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold ${form.vendorNo && form.plantName && form.family && form.therapeuticUse ? "bg-green-100 text-green-700" : "bg-gray-100 text-gray-400"}`}>
-                  {form.vendorNo && form.plantName && form.family && form.therapeuticUse ? "✓" : "1"}
-                </span>
-                Form valid
-              </div>
-              <div className="w-6 h-px bg-gray-200" />
-              <div className="flex items-center gap-2 text-xs text-gray-500">
-                <span className={`w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold ${hasImages ? "bg-green-100 text-green-700" : "bg-gray-100 text-gray-400"}`}>
-                  {hasImages ? "✓" : "2"}
-                </span>
-                Photos ready
-              </div>
-              <div className="w-6 h-px bg-gray-200" />
-              <div className="flex items-center gap-2 text-xs text-gray-500">
-                <span className="w-5 h-5 rounded-full bg-gray-100 text-gray-400 flex items-center justify-center text-[10px] font-bold">3</span>
-                Download
-              </div>
+              {[
+                { label: "Form valid",   done: formFilled },
+                { label: "Photos ready", done: hasImages  },
+              ].map(({ label, done }, i) => (
+                <div key={label} className="flex items-center gap-2 text-xs text-gray-500">
+                  {i > 0 && <div className="w-5 h-px bg-gray-200" />}
+                  <span className={`w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold transition-colors ${done ? "bg-green-100 text-green-700" : "bg-gray-100 text-gray-400"}`}>
+                    {done ? "✓" : i + 1}
+                  </span>
+                  <span>{label}</span>
+                </div>
+              ))}
             </div>
 
             <button
               type="submit"
               disabled={submitting}
-              className="w-full sm:w-auto order-1 sm:order-3 relative overflow-hidden px-8 py-3 bg-green-800 hover:bg-green-700 disabled:opacity-60 text-white rounded-xl text-sm font-bold transition-all shadow-lg hover:shadow-green-200 hover:-translate-y-0.5 active:translate-y-0 flex items-center justify-center gap-2"
+              className="w-full sm:w-auto order-1 sm:order-3 relative overflow-hidden px-8 py-3.5 bg-green-800 hover:bg-green-700 disabled:opacity-60 disabled:cursor-not-allowed text-white rounded-xl text-sm font-bold transition-all shadow-lg hover:shadow-green-200 hover:-translate-y-0.5 active:translate-y-0 flex items-center justify-center gap-2"
             >
               {submitting ? (
                 <>
                   <svg className="w-4 h-4 animate-spin" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" d="M12 3v3m0 12v3m9-9h-3M6 12H3" />
                   </svg>
-                  Processing…
+                  Saving to server…
                 </>
               ) : (
                 <>
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2M7 10l5 5m0 0l5-5m-5 5V4" />
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
                   </svg>
-                  Save & Download Files
+                  Submit Plant Record
                 </>
               )}
             </button>
           </div>
 
-          {/* Instructions card */}
-          <div className="bg-white rounded-2xl border border-green-100 shadow-sm p-5">
-            <h3 className="text-sm font-bold text-green-900 flex items-center gap-2 mb-3">
-              <span className="w-6 h-6 rounded-lg bg-green-100 flex items-center justify-center text-sm">📌</span>
-              After Downloading
-            </h3>
-            <ol className="space-y-2">
-              {[
-                { step: "Replace", detail: "Overwrite /public/Data.xlsx on your server with the downloaded Data.xlsx" },
-                { step: "Move images", detail: "Place the downloaded image files into /public/plants/ directory" },
-                { step: "Verify", detail: "Open the Database page and search for the new plant to confirm it appears" },
-              ].map(({ step, detail }, i) => (
-                <li key={step} className="flex items-start gap-3 text-sm">
-                  <span className="w-5 h-5 rounded-full bg-green-800 text-white text-[10px] font-bold flex items-center justify-center shrink-0 mt-0.5">
-                    {i + 1}
-                  </span>
-                  <span className="text-gray-600">
-                    <span className="font-semibold text-green-900">{step} — </span>
-                    {detail}
-                  </span>
-                </li>
-              ))}
-            </ol>
-          </div>
-
         </form>
       </div>
 
-      {/* ── TOAST ─────────────────────────────────────────────── */}
       {toast && (
-        <Toast
-          message={toast.message}
-          type={toast.type}
-          onClose={() => setToast(null)}
-        />
+        <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />
       )}
 
-      {/* ── FOOTER ─────────────────────────────────────────────── */}
       <footer className="mt-12 bg-green-950 text-gray-500 py-6 text-center text-xs">
         <p>
           &copy; {new Date().getFullYear()} Trident Academy of Creative Technology, BBSR
