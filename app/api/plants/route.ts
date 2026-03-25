@@ -1,22 +1,22 @@
 // ─────────────────────────────────────────────────────────────
 // FILE: app/api/plants/route.ts
 //
-// PLACEMENT: You must create this exact directory structure:
-//   app/
-//     api/
-//       plants/
-//         route.ts   ← this file goes HERE
+// Works on BOTH localhost AND Vercel.
 //
-// IMPORTANT: The filename MUST be "route.ts" (not "api.ts", not "plants.ts")
-// Next.js App Router requires files named exactly "route.ts" inside app/api/
+// Storage strategy:
+//   • Images  → Vercel Blob  (permanent, public CDN URLs)
+//   • Excel   → Vercel Blob  (read latest, append row, re-upload)
+//
+// Setup (one-time):
+//   1. In Vercel dashboard → Storage → Create Blob store → link to project
+//   2. Run:  npx vercel env pull   (pulls BLOB_READ_WRITE_TOKEN to .env.local)
+//   3. Run:  npm install @vercel/blob
 // ─────────────────────────────────────────────────────────────
 
 import { NextRequest, NextResponse } from "next/server";
-import path from "path";
-import fs from "fs/promises";
+import { put, list, getDownloadUrl } from "@vercel/blob";
 
-const DATA_FILE  = path.join(process.cwd(), "public", "Data.xlsx");
-const PLANTS_DIR = path.join(process.cwd(), "public", "plants");
+const XLSX_BLOB_PATHNAME = "data/Data.xlsx"; // fixed path in Blob store
 
 const COLUMNS = [
   "Voucher No.",
@@ -30,9 +30,30 @@ const COLUMNS = [
   "Photo",
 ];
 
+// ── Helper: fetch the current Data.xlsx from Blob (or null) ───
+async function fetchWorkbook() {
+  const XLSX = await import("xlsx");
+
+  try {
+    // List blobs to find the xlsx
+    const { blobs } = await list({ prefix: XLSX_BLOB_PATHNAME });
+    if (blobs.length === 0) return null;
+
+    const res = await fetch(blobs[0].downloadUrl);
+    if (!res.ok) return null;
+
+    const buf = Buffer.from(await res.arrayBuffer());
+    return XLSX.read(buf, { type: "buffer" });
+  } catch {
+    return null;
+  }
+}
+
 export async function POST(req: NextRequest) {
   try {
-    // ── Parse multipart form data ──────────────────────────────
+    const XLSX = await import("xlsx");
+
+    // ── 1. Parse form data ─────────────────────────────────────
     const formData = await req.formData();
 
     const vendorNo       = ((formData.get("vendorNo")       as string) ?? "").trim();
@@ -43,10 +64,10 @@ export async function POST(req: NextRequest) {
     const habitat        = ((formData.get("habitat")        as string) ?? "").trim();
     const collectionArea = ((formData.get("collectionArea") as string) ?? "").trim();
     const plantPartsUsed = ((formData.get("plantPartsUsed") as string) ?? "").trim();
-    const fieldPhoto     = formData.get("fieldPhoto")    as File | null;
+    const fieldPhoto     = formData.get("fieldPhoto")     as File | null;
     const herbariumPhoto = formData.get("herbariumPhoto") as File | null;
 
-    // ── Validate ───────────────────────────────────────────────
+    // ── 2. Validate ────────────────────────────────────────────
     if (!vendorNo || !plantName || !family || !therapeuticUse) {
       return NextResponse.json(
         { error: "Missing required fields: Voucher No., Plant Name, Family, Therapeutic Use" },
@@ -54,55 +75,67 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // ── Ensure /public/plants/ exists ──────────────────────────
-    await fs.mkdir(PLANTS_DIR, { recursive: true });
-
     const safeBase = plantName.replace(/[/\\?%*:|"<>]/g, "_");
 
-    // ── Save images ────────────────────────────────────────────
-    async function saveImage(file: File, suffix: string) {
-      const ext      = (file.name.split(".").pop() ?? "jpg").toLowerCase();
-      const filename = `${safeBase}${suffix}.${ext}`;
-      const buf      = Buffer.from(await file.arrayBuffer());
-      await fs.writeFile(path.join(PLANTS_DIR, filename), buf);
+    // ── 3. Upload images to Vercel Blob ────────────────────────
+    let fieldPhotoUrl    = "";
+    let herbariumUrl     = "";
+
+    if (fieldPhoto && fieldPhoto.size > 0) {
+      const ext  = (fieldPhoto.name.split(".").pop() ?? "jpg").toLowerCase();
+      const blob = await put(`plants/${safeBase}.${ext}`, fieldPhoto, {
+        access: "public",
+        contentType: fieldPhoto.type || "image/jpeg",
+      });
+      fieldPhotoUrl = blob.url;
     }
 
-    if (fieldPhoto    && fieldPhoto.size    > 0) await saveImage(fieldPhoto,    "");
-    if (herbariumPhoto && herbariumPhoto.size > 0) await saveImage(herbariumPhoto, "_Herbarium");
+    if (herbariumPhoto && herbariumPhoto.size > 0) {
+      const ext  = (herbariumPhoto.name.split(".").pop() ?? "jpg").toLowerCase();
+      const blob = await put(`plants/${safeBase}_Herbarium.${ext}`, herbariumPhoto, {
+        access: "public",
+        contentType: herbariumPhoto.type || "image/jpeg",
+      });
+      herbariumUrl = blob.url;
+    }
 
-    // ── Read / create Excel using dynamic import ───────────────
-    // Dynamic import avoids any SSR/bundler issues with xlsx
-    const XLSX = await import("xlsx");
+    // ── 4. Load or create workbook ─────────────────────────────
+    let workbook = await fetchWorkbook();
 
-    let workbook: import("xlsx").WorkBook;
-    try {
-      const existing = await fs.readFile(DATA_FILE);
-      workbook = XLSX.read(existing, { type: "buffer" });
-    } catch {
-      // Data.xlsx doesn't exist yet — create fresh with headers
+    if (!workbook) {
       workbook = XLSX.utils.book_new();
       const ws = XLSX.utils.aoa_to_sheet([COLUMNS]);
       XLSX.utils.book_append_sheet(workbook, ws, "Plants");
     }
 
-    const sheetName = workbook.SheetNames[0];
-    const ws        = workbook.Sheets[sheetName];
+    const ws = workbook.Sheets[workbook.SheetNames[0]];
 
-    // ── Append new row ─────────────────────────────────────────
+    // ── 5. Append row ──────────────────────────────────────────
+    // Photo column stores the Blob URL (full URL) so the database
+    // page can load it directly without guessing the path.
+    // The fieldPhotoUrl IS the full https:// URL to the image.
     XLSX.utils.sheet_add_aoa(
       ws,
-      [[vendorNo, plantName, family, therapeuticUse,
-        localName, habitat, collectionArea, plantPartsUsed, safeBase]],
+      [[
+        vendorNo, plantName, family, therapeuticUse,
+        localName, habitat, collectionArea, plantPartsUsed,
+        fieldPhotoUrl || safeBase,   // store full URL if uploaded, else name
+      ]],
       { origin: -1 }
     );
 
-    // ── Write Excel back to disk ───────────────────────────────
+    // ── 6. Write updated Excel back to Blob ────────────────────
     const outBuf = XLSX.write(workbook, { type: "buffer", bookType: "xlsx" });
-    await fs.writeFile(DATA_FILE, outBuf);
+    await put(XLSX_BLOB_PATHNAME, outBuf, {
+      access: "public",
+      contentType: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    });
 
     return NextResponse.json({
       success: true,
       message: `"${plantName}" added successfully.`,
+      fieldPhotoUrl,
+      herbariumUrl,
     });
 
   } catch (err: any) {
@@ -114,8 +147,6 @@ export async function POST(req: NextRequest) {
   }
 }
 
-// ── Health-check GET so you can verify the route is live ──────
-// Visit http://localhost:3000/api/plants in the browser — should return {"ok":true}
 export async function GET() {
   return NextResponse.json({ ok: true, route: "api/plants is reachable" });
 }

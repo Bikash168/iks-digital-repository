@@ -1,0 +1,7 @@
+{
+  "functions": {
+    "app/api/plants/route.ts": {
+      "maxDuration": 30
+    }
+  }
+}

@@ -30,16 +30,38 @@ function getPlantImageCandidates(photo: string, plantName: string): string[] {
   function buildCandidates(source: string): string[] {
     const s = source.trim();
     if (!s) return [];
+
+    // Full URL (Vercel Blob or absolute path)
     if (s.startsWith("http://") || s.startsWith("https://") || s.startsWith("/")) {
-      return [s];
+      const candidates = [s];
+
+      // If it's a Vercel Blob URL for the field photo, also derive the herbarium sibling.
+      // Blob URLs look like: https://xxxx.public.blob.vercel-storage.com/plants/Acalypha indica.jpg
+      // Herbarium sibling:   https://xxxx.public.blob.vercel-storage.com/plants/Acalypha indica_Herbarium.jpg
+      if ((s.startsWith("http://") || s.startsWith("https://")) && !s.includes("_Herbarium")) {
+        const extMatch = s.match(/\.(jpe?g|png|webp|gif)(\?.*)?$/i);
+        if (extMatch) {
+          const ext       = extMatch[1];
+          const beforeExt = s.slice(0, s.lastIndexOf(`.${ext}`));
+          candidates.push(`${beforeExt}_Herbarium.${ext}`);
+        } else {
+          // No extension in URL — try appending _Herbarium
+          candidates.push(`${s}_Herbarium`);
+        }
+      }
+      return candidates;
     }
+
+    // Local filename (dev / self-hosted)
     const hasExt = /\.(jpe?g|png|webp|gif)$/i.test(s);
-    const base = s.replace(/\.(jpe?g|png|webp|gif)$/i, "").trim();
+    const base   = s.replace(/\.(jpe?g|png|webp|gif)$/i, "").trim();
+
     function tryName(name: string): string[] {
       if (!name) return [];
       if (hasExt) return [`/plants/${encodeURIComponent(name)}`];
       return exts.map((ext) => `/plants/${encodeURIComponent(name + ext)}`);
     }
+
     return [
       ...tryName(s),
       ...tryName(`${base}_Herbarium`),
@@ -48,8 +70,8 @@ function getPlantImageCandidates(photo: string, plantName: string): string[] {
 
   const fromPhoto = buildCandidates(photo);
   if (fromPhoto.length > 0) return [...new Set(fromPhoto)];
-  const fromName = buildCandidates(plantName);
-  if (fromName.length > 0) return [...new Set(fromName)];
+  const fromName  = buildCandidates(plantName);
+  if (fromName.length  > 0) return [...new Set(fromName)];
   return [];
 }
 
