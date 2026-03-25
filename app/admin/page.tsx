@@ -1,70 +1,83 @@
 "use client";
 
-// ─────────────────────────────────────────────────────────────
 // FILE: app/admin/page.tsx
-// ─────────────────────────────────────────────────────────────
 
 import { useState, useRef, useCallback, useEffect } from "react";
 import { useRouter } from "next/navigation";
 
-// ─── Types ────────────────────────────────────────────────────
+const IS_VERCEL = process.env.NEXT_PUBLIC_VERCEL === "1" ||
+  (typeof window !== "undefined" && window.location.hostname !== "localhost" &&
+   window.location.hostname !== "127.0.0.1");
 
 type PlantForm = {
-  vendorNo: string;
-  plantName: string;
-  family: string;
-  therapeuticUse: string;
-  localName: string;
-  habitat: string;
-  collectionArea: string;
-  plantPartsUsed: string;
+  vendorNo: string; plantName: string; family: string; therapeuticUse: string;
+  localName: string; habitat: string; collectionArea: string; plantPartsUsed: string;
 };
 
 type ImageSlot = {
-  file: File | null;
-  preview: string | null;
-  label: string;
-  icon: string;
-  fieldKey: "fieldPhoto" | "herbariumPhoto";
-  suffix: string;
+  file: File | null; preview: string | null;
+  label: string; icon: string;
+  fieldKey: "fieldPhoto" | "herbariumPhoto"; suffix: string;
 };
 
+type UploadState = "idle" | "uploading" | "done" | "error";
+
 const EMPTY_FORM: PlantForm = {
-  vendorNo: "",
-  plantName: "",
-  family: "",
-  therapeuticUse: "",
-  localName: "",
-  habitat: "",
-  collectionArea: "",
-  plantPartsUsed: "",
+  vendorNo: "", plantName: "", family: "", therapeuticUse: "",
+  localName: "", habitat: "", collectionArea: "", plantPartsUsed: "",
 };
 
 const FIELDS: {
-  key: keyof PlantForm;
-  label: string;
-  placeholder: string;
-  required: boolean;
-  textarea?: boolean;
-  icon: string;
+  key: keyof PlantForm; label: string; placeholder: string;
+  required: boolean; textarea?: boolean; icon: string;
 }[] = [
-  { key: "vendorNo",       label: "Voucher No.",      placeholder: "e.g. TACT-001",                    required: true,  icon: "🔖" },
-  { key: "plantName",      label: "Plant Name",        placeholder: "Scientific name",                  required: true,  icon: "🌿" },
-  { key: "family",         label: "Family",            placeholder: "e.g. Fabaceae",                    required: true,  icon: "🏷️" },
-  { key: "localName",      label: "Local Name",        placeholder: "Local / common name",              required: false, icon: "🗣️" },
-  { key: "habitat",        label: "Habitat",           placeholder: "e.g. Moist deciduous forest",     required: false, icon: "🌍" },
-  { key: "collectionArea", label: "Collection Area",   placeholder: "District / village / coordinates", required: false, icon: "📍" },
-  { key: "plantPartsUsed", label: "Plant Parts Used",  placeholder: "e.g. Leaves, Bark, Root",         required: false, icon: "✂️" },
-  { key: "therapeuticUse", label: "Therapeutic Use",   placeholder: "Describe the medicinal uses…",    required: true,  textarea: true, icon: "🩺" },
+  { key: "vendorNo",       label: "Voucher No.",     placeholder: "e.g. TACT-001",                    required: true,  icon: "🔖" },
+  { key: "plantName",      label: "Plant Name",       placeholder: "Scientific name",                  required: true,  icon: "🌿" },
+  { key: "family",         label: "Family",           placeholder: "e.g. Fabaceae",                    required: true,  icon: "🏷️" },
+  { key: "localName",      label: "Local Name",       placeholder: "Local / common name",              required: false, icon: "🗣️" },
+  { key: "habitat",        label: "Habitat",          placeholder: "e.g. Moist deciduous forest",     required: false, icon: "🌍" },
+  { key: "collectionArea", label: "Collection Area",  placeholder: "District / village / coordinates", required: false, icon: "📍" },
+  { key: "plantPartsUsed", label: "Plant Parts Used", placeholder: "e.g. Leaves, Bark, Root",         required: false, icon: "✂️" },
+  { key: "therapeuticUse", label: "Therapeutic Use",  placeholder: "Describe the medicinal uses…",    required: true,  textarea: true, icon: "🩺" },
 ];
 
-// ─── Drag-and-drop image uploader ────────────────────────────
+// ─── Upload image: client-side to Vercel Blob OR local API ───
 
-function ImageUploader({
-  slot,
-  onChange,
-}: {
+async function uploadImage(
+  file: File,
+  filename: string,
+  onProgress: (pct: number) => void
+): Promise<string> {
+  if (IS_VERCEL) {
+    // Client-side direct upload to Vercel Blob — bypasses 4.5MB limit completely
+    const { upload } = await import("@vercel/blob/client");
+    const blob = await upload(`plants/${filename}`, file, {
+      access: "public",
+      handleUploadUrl: "/api/upload",
+    });
+    onProgress(100);
+    return blob.url;
+  } else {
+    // Local: POST file to a local helper endpoint
+    const fd = new FormData();
+    fd.append("file", file);
+    fd.append("filename", filename);
+    const res = await fetch("/api/upload-local", { method: "POST", body: fd });
+    onProgress(100);
+    if (!res.ok) {
+      const j = await res.json().catch(() => ({}));
+      throw new Error(j.error ?? "Local upload failed");
+    }
+    return filename; // local: just return filename, path resolved by database page
+  }
+}
+
+// ─── Image uploader component ─────────────────────────────────
+
+function ImageUploader({ slot, uploadState, uploadPct, onChange }: {
   slot: ImageSlot;
+  uploadState: UploadState;
+  uploadPct: number;
   onChange: (file: File | null, preview: string | null) => void;
 }) {
   const inputRef = useRef<HTMLInputElement>(null);
@@ -78,11 +91,17 @@ function ImageUploader({
   }
 
   const onDrop = useCallback((e: React.DragEvent) => {
-    e.preventDefault();
-    setDragging(false);
+    e.preventDefault(); setDragging(false);
     const file = e.dataTransfer.files[0];
     if (file) handleFile(file);
   }, []);
+
+  const stateColors: Record<UploadState, string> = {
+    idle:      "border-green-200 bg-[#f8faf7]",
+    uploading: "border-blue-300 bg-blue-50",
+    done:      "border-green-400 bg-green-50",
+    error:     "border-red-300 bg-red-50",
+  };
 
   return (
     <div className="flex flex-col gap-2">
@@ -94,27 +113,41 @@ function ImageUploader({
       {slot.preview ? (
         <div className="relative rounded-xl overflow-hidden border-2 border-green-300 shadow-sm group" style={{ height: "200px" }}>
           <img src={slot.preview} alt={slot.label} className="w-full h-full object-cover" />
-          <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-3">
-            <button
-              type="button"
-              onClick={() => inputRef.current?.click()}
-              className="bg-white text-green-900 text-xs font-bold px-3 py-1.5 rounded-lg hover:bg-green-50 transition"
-            >
-              Replace
-            </button>
-            <button
-              type="button"
-              onClick={() => onChange(null, null)}
-              className="bg-red-500 text-white text-xs font-bold px-3 py-1.5 rounded-lg hover:bg-red-600 transition"
-            >
-              Remove
-            </button>
-          </div>
+
+          {/* Upload progress overlay */}
+          {uploadState === "uploading" && (
+            <div className="absolute inset-0 bg-black/50 flex flex-col items-center justify-center gap-3">
+              <div className="w-3/4 bg-white/20 rounded-full h-2">
+                <div
+                  className="bg-green-400 h-2 rounded-full transition-all duration-300"
+                  style={{ width: `${uploadPct}%` }}
+                />
+              </div>
+              <span className="text-white text-xs font-bold">Uploading {uploadPct}%</span>
+            </div>
+          )}
+
+          {uploadState === "done" && (
+            <span className="absolute top-2 right-2 bg-green-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full">
+              ✓ Uploaded
+            </span>
+          )}
+
+          {uploadState === "idle" && (
+            <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-3">
+              <button type="button" onClick={() => inputRef.current?.click()}
+                className="bg-white text-green-900 text-xs font-bold px-3 py-1.5 rounded-lg hover:bg-green-50 transition">
+                Replace
+              </button>
+              <button type="button" onClick={() => onChange(null, null)}
+                className="bg-red-500 text-white text-xs font-bold px-3 py-1.5 rounded-lg hover:bg-red-600 transition">
+                Remove
+              </button>
+            </div>
+          )}
+
           <span className="absolute bottom-2 left-2 bg-black/60 text-white text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider">
             {slot.label}
-          </span>
-          <span className="absolute top-2 right-2 bg-green-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full">
-            ✓ Ready
           </span>
         </div>
       ) : (
@@ -124,16 +157,11 @@ function ImageUploader({
           onDragLeave={() => setDragging(false)}
           onClick={() => inputRef.current?.click()}
           className={`relative rounded-xl border-2 border-dashed cursor-pointer transition-all flex flex-col items-center justify-center gap-3 select-none
-            ${dragging
-              ? "border-green-500 bg-green-50 scale-[1.02]"
-              : "border-green-200 bg-[#f8faf7] hover:border-green-400 hover:bg-green-50"
-            }`}
+            ${dragging ? "border-green-500 bg-green-50 scale-[1.02]" : "border-green-200 bg-[#f8faf7] hover:border-green-400 hover:bg-green-50"}`}
           style={{ height: "200px" }}
         >
-          <div
-            className={`w-14 h-14 rounded-full flex items-center justify-center text-3xl transition-transform ${dragging ? "scale-110" : ""}`}
-            style={{ background: "linear-gradient(135deg, #d1fae5, #bbf7d0)" }}
-          >
+          <div className={`w-14 h-14 rounded-full flex items-center justify-center text-3xl transition-transform ${dragging ? "scale-110" : ""}`}
+            style={{ background: "linear-gradient(135deg, #d1fae5, #bbf7d0)" }}>
             {slot.icon}
           </div>
           <div className="text-center px-4">
@@ -145,16 +173,9 @@ function ImageUploader({
         </div>
       )}
 
-      <input
-        ref={inputRef}
-        type="file"
-        accept="image/jpeg,image/png,image/webp,image/gif"
+      <input ref={inputRef} type="file" accept="image/jpeg,image/png,image/webp,image/gif"
         className="hidden"
-        onChange={(e) => {
-          const file = e.target.files?.[0];
-          if (file) handleFile(file);
-          e.target.value = "";
-        }}
+        onChange={(e) => { const f = e.target.files?.[0]; if (f) handleFile(f); e.target.value = ""; }}
       />
     </div>
   );
@@ -163,23 +184,15 @@ function ImageUploader({
 // ─── Toast ────────────────────────────────────────────────────
 
 function Toast({ message, type, onClose }: {
-  message: string;
-  type: "success" | "error" | "info";
-  onClose: () => void;
+  message: string; type: "success" | "error" | "info"; onClose: () => void;
 }) {
-  const colors = {
-    success: "bg-green-800 text-white",
-    error:   "bg-red-700 text-white",
-    info:    "bg-blue-700 text-white",
-  };
-  const icons = { success: "✅", error: "❌", info: "ℹ️" };
-
   return (
     <div
-      className={`fixed bottom-6 left-1/2 -translate-x-1/2 z-50 flex items-center gap-3 px-5 py-3.5 rounded-2xl shadow-2xl text-sm font-semibold ${colors[type]}`}
+      className={`fixed bottom-6 left-1/2 -translate-x-1/2 z-50 flex items-center gap-3 px-5 py-3.5 rounded-2xl shadow-2xl text-sm font-semibold
+        ${type === "success" ? "bg-green-800" : type === "error" ? "bg-red-700" : "bg-blue-700"} text-white`}
       style={{ minWidth: "300px", maxWidth: "92vw" }}
     >
-      <span className="text-lg shrink-0">{icons[type]}</span>
+      <span className="text-lg shrink-0">{type === "success" ? "✅" : type === "error" ? "❌" : "ℹ️"}</span>
       <span className="flex-1">{message}</span>
       <button onClick={onClose} className="ml-2 opacity-70 hover:opacity-100 text-lg leading-none">✕</button>
     </div>
@@ -190,8 +203,6 @@ function Toast({ message, type, onClose }: {
 
 export default function AdminPage() {
   const router = useRouter();
-
-  // ── Auth guard ───────────────────────────────────────────────
   const [authChecked, setAuthChecked] = useState(false);
 
   useEffect(() => {
@@ -207,14 +218,17 @@ export default function AdminPage() {
     router.push("/login");
   }
 
-  // ── Form state ───────────────────────────────────────────────
-  const [form, setForm]             = useState<PlantForm>(EMPTY_FORM);
-  const [images, setImages]         = useState<ImageSlot[]>([
+  const [form, setForm]         = useState<PlantForm>(EMPTY_FORM);
+  const [images, setImages]     = useState<ImageSlot[]>([
     { file: null, preview: null, label: "Field Photo",     icon: "📷", fieldKey: "fieldPhoto",     suffix: ""           },
     { file: null, preview: null, label: "Herbarium Sheet", icon: "🌿", fieldKey: "herbariumPhoto", suffix: "_Herbarium" },
   ]);
+  // Per-slot upload state
+  const [uploadStates, setUploadStates] = useState<UploadState[]>(["idle", "idle"]);
+  const [uploadPcts,   setUploadPcts]   = useState<number[]>([0, 0]);
+
   const [submitting, setSubmitting] = useState(false);
-  const [toast, setToast]           = useState<{ message: string; type: "success" | "error" | "info" } | null>(null);
+  const [toast, setToast]           = useState<{ message: string; type: "success"|"error"|"info" } | null>(null);
   const [lastAdded, setLastAdded]   = useState<PlantForm | null>(null);
   const [errors, setErrors]         = useState<Partial<Record<keyof PlantForm, string>>>({});
 
@@ -225,6 +239,9 @@ export default function AdminPage() {
 
   function updateImage(idx: number, file: File | null, preview: string | null) {
     setImages((imgs) => imgs.map((img, i) => i === idx ? { ...img, file, preview } : img));
+    // Reset upload state when image changes
+    setUploadStates((s) => s.map((v, i) => i === idx ? "idle" : v));
+    setUploadPcts((p)   => p.map((v, i) => i === idx ? 0     : v));
   }
 
   function validate(): boolean {
@@ -237,65 +254,93 @@ export default function AdminPage() {
     return Object.keys(errs).length === 0;
   }
 
-  function showToast(message: string, type: "success" | "error" | "info") {
+  function showToast(message: string, type: "success"|"error"|"info") {
     setToast({ message, type });
     setTimeout(() => setToast(null), 5000);
   }
 
-  // ── Submit → POST multipart to /api/plants ───────────────────
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (!validate()) {
-      showToast("Please fix the highlighted fields.", "error");
-      return;
-    }
+    if (!validate()) { showToast("Please fix the highlighted fields.", "error"); return; }
 
     setSubmitting(true);
 
     try {
-      const fd = new FormData();
-      fd.append("vendorNo",       form.vendorNo);
-      fd.append("plantName",      form.plantName);
-      fd.append("family",         form.family);
-      fd.append("therapeuticUse", form.therapeuticUse);
-      fd.append("localName",      form.localName);
-      fd.append("habitat",        form.habitat);
-      fd.append("collectionArea", form.collectionArea);
-      fd.append("plantPartsUsed", form.plantPartsUsed);
+      const safeBase = form.plantName.trim().replace(/[/\\?%*:|"<>]/g, "_");
+      let fieldPhotoUrl = "";
 
-      for (const slot of images) {
-        if (slot.file) fd.append(slot.fieldKey, slot.file);
+      // ── Step 1: Upload images directly from browser ──────────
+      for (let i = 0; i < images.length; i++) {
+        const slot = images[i];
+        if (!slot.file) continue;
+
+        setUploadStates((s) => s.map((v, j) => j === i ? "uploading" : v));
+        setUploadPcts((p)   => p.map((v, j) => j === i ? 0 : v));
+
+        try {
+          const ext      = (slot.file.name.split(".").pop() ?? "jpg").toLowerCase();
+          const filename = `${safeBase}${slot.suffix}.${ext}`;
+          const url      = await uploadImage(
+            slot.file,
+            filename,
+            (pct) => setUploadPcts((p) => p.map((v, j) => j === i ? pct : v))
+          );
+
+          if (slot.fieldKey === "fieldPhoto") fieldPhotoUrl = url;
+
+          setUploadStates((s) => s.map((v, j) => j === i ? "done" : v));
+        } catch (uploadErr: any) {
+          setUploadStates((s) => s.map((v, j) => j === i ? "error" : v));
+          throw new Error(`Image upload failed: ${uploadErr.message}`);
+        }
       }
 
-      const res = await fetch("/api/plants", { method: "POST", body: fd });
+      // ── Step 2: POST only JSON to /api/plants ────────────────
+      const res = await fetch("/api/plants", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          vendorNo:       form.vendorNo,
+          plantName:      form.plantName,
+          family:         form.family,
+          therapeuticUse: form.therapeuticUse,
+          localName:      form.localName,
+          habitat:        form.habitat,
+          collectionArea: form.collectionArea,
+          plantPartsUsed: form.plantPartsUsed,
+          fieldPhotoUrl,  // full Blob URL (Vercel) or filename (local)
+        }),
+      });
 
-      // Safely parse response — guard against HTML error pages (404/500)
       const contentType = res.headers.get("content-type") ?? "";
       if (!contentType.includes("application/json")) {
         const text = await res.text();
-        console.error("Non-JSON response from /api/plants:", text.slice(0, 300));
+        console.error("Non-JSON from /api/plants:", text.slice(0, 300));
         throw new Error(
           res.status === 404
-            ? "API route not found. Make sure app/api/plants/route.ts exists and the dev server was restarted."
-            : `Server returned ${res.status}. Check the terminal for errors.`
+            ? "API route not found. Check app/api/plants/route.ts exists."
+            : `Server returned ${res.status}. Check Vercel function logs.`
         );
       }
 
       const json = await res.json();
       if (!res.ok) throw new Error(json.error ?? `Server error ${res.status}`);
 
+      // ── Success ──────────────────────────────────────────────
       setLastAdded(form);
       setForm(EMPTY_FORM);
       setImages([
         { file: null, preview: null, label: "Field Photo",     icon: "📷", fieldKey: "fieldPhoto",     suffix: ""           },
         { file: null, preview: null, label: "Herbarium Sheet", icon: "🌿", fieldKey: "herbariumPhoto", suffix: "_Herbarium" },
       ]);
+      setUploadStates(["idle", "idle"]);
+      setUploadPcts([0, 0]);
       setErrors({});
       showToast(`"${form.plantName}" saved to database!`, "success");
 
     } catch (err: any) {
       console.error(err);
-      showToast(err.message ?? "Something went wrong. Please try again.", "error");
+      showToast(err.message ?? "Something went wrong.", "error");
     } finally {
       setSubmitting(false);
     }
@@ -307,6 +352,8 @@ export default function AdminPage() {
       { file: null, preview: null, label: "Field Photo",     icon: "📷", fieldKey: "fieldPhoto",     suffix: ""           },
       { file: null, preview: null, label: "Herbarium Sheet", icon: "🌿", fieldKey: "herbariumPhoto", suffix: "_Herbarium" },
     ]);
+    setUploadStates(["idle", "idle"]);
+    setUploadPcts([0, 0]);
     setErrors({});
     setLastAdded(null);
   }
@@ -330,14 +377,10 @@ export default function AdminPage() {
   return (
     <div className="font-serif min-h-screen bg-[#f4f7f4]">
 
-      {/* ── NAV ──────────────────────────────────────────────── */}
       <nav className="sticky top-0 z-40 bg-green-950 shadow-lg border-b border-green-800">
         <div className="max-w-5xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between gap-4">
-
-          <button
-            onClick={() => router.push("/")}
-            className="flex items-center gap-2 text-green-300 hover:text-white font-semibold text-sm transition-colors group"
-          >
+          <button onClick={() => router.push("/")}
+            className="flex items-center gap-2 text-green-300 hover:text-white font-semibold text-sm transition-colors group">
             <svg className="w-5 h-5 group-hover:-translate-x-0.5 transition-transform" fill="none" stroke="currentColor" strokeWidth={2.2} viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
             </svg>
@@ -353,51 +396,38 @@ export default function AdminPage() {
           </div>
 
           <div className="flex items-center gap-2">
-            <button
-              onClick={() => router.push("/database")}
-              className="flex items-center gap-1.5 px-3 py-1.5 bg-green-700 hover:bg-green-600 text-white rounded-lg text-xs font-semibold transition-colors"
-            >
+            <button onClick={() => router.push("/database")}
+              className="flex items-center gap-1.5 px-3 py-1.5 bg-green-700 hover:bg-green-600 text-white rounded-lg text-xs font-semibold transition-colors">
               <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 10h16M4 14h16M4 18h16" />
               </svg>
               <span className="hidden sm:inline">View Database</span>
             </button>
-
-            <button
-              onClick={handleLogout}
-              className="flex items-center gap-1.5 px-3 py-1.5 bg-red-700/80 hover:bg-red-600 text-white rounded-lg text-xs font-semibold transition-colors"
-            >
+            <button onClick={handleLogout}
+              className="flex items-center gap-1.5 px-3 py-1.5 bg-red-700/80 hover:bg-red-600 text-white rounded-lg text-xs font-semibold transition-colors">
               <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
               </svg>
               <span className="hidden sm:inline">Logout</span>
             </button>
           </div>
-
         </div>
       </nav>
 
-      {/* ── HERO ─────────────────────────────────────────────── */}
       <div className="bg-green-950 text-white pb-10 pt-8 px-4">
         <div className="max-w-5xl mx-auto">
           <div className="flex items-start gap-5">
-            <div className="hidden sm:flex w-16 h-16 rounded-2xl bg-green-700/50 border border-green-600/40 items-center justify-center text-4xl shrink-0">
-              ➕
-            </div>
+            <div className="hidden sm:flex w-16 h-16 rounded-2xl bg-green-700/50 border border-green-600/40 items-center justify-center text-4xl shrink-0">➕</div>
             <div>
               <p className="text-green-400 text-xs font-bold uppercase tracking-[0.2em] mb-1">IKS Digital Repository</p>
               <h1 className="text-2xl sm:text-3xl font-bold text-white leading-tight">Add New Plant Record</h1>
               <p className="text-green-300 text-sm mt-2 max-w-xl leading-relaxed">
-                Fill in the plant details and upload photos. Data is saved directly to
-                <code className="bg-green-800/60 px-1.5 py-0.5 rounded text-green-200 text-xs mx-1">Data.xlsx</code>
-                and images to
-                <code className="bg-green-800/60 px-1.5 py-0.5 rounded text-green-200 text-xs mx-1">/public/plants/</code>
-                on the server.
+                Images upload <strong className="text-green-200">directly to CDN</strong> from your browser —
+                no server size limits. Text data is then saved to the database.
               </p>
             </div>
           </div>
 
-          {/* Progress steps */}
           <div className="mt-8 flex items-center gap-0 flex-wrap sm:flex-nowrap">
             {[
               { label: "Fill Plant Details", done: formFilled  },
@@ -406,7 +436,7 @@ export default function AdminPage() {
             ].map(({ label, done }, i) => (
               <div key={label} className="flex items-center">
                 <div className={`flex items-center gap-2 border rounded-lg px-3 py-2 transition-colors ${done ? "bg-green-600/40 border-green-500/50" : "bg-green-800/50 border-green-700/40"}`}>
-                  <span className={`w-5 h-5 rounded-full text-white text-[11px] font-bold flex items-center justify-center shrink-0 transition-colors ${done ? "bg-green-400" : "bg-green-600"}`}>
+                  <span className={`w-5 h-5 rounded-full text-white text-[11px] font-bold flex items-center justify-center shrink-0 ${done ? "bg-green-400" : "bg-green-600"}`}>
                     {done ? "✓" : i + 1}
                   </span>
                   <span className="text-green-200 text-xs font-medium whitespace-nowrap">{label}</span>
@@ -418,32 +448,25 @@ export default function AdminPage() {
         </div>
       </div>
 
-      {/* ── FORM ─────────────────────────────────────────────── */}
       <div className="max-w-5xl mx-auto px-4 sm:px-6 py-8 space-y-6">
 
-        {/* Success banner */}
         {lastAdded && (
           <div className="bg-green-50 border border-green-200 rounded-2xl p-5 flex flex-col sm:flex-row items-start sm:items-center gap-4 shadow-sm">
             <div className="w-12 h-12 rounded-full bg-green-100 flex items-center justify-center text-2xl shrink-0">✅</div>
             <div className="flex-1">
-              <p className="font-bold text-green-900 text-sm">Record saved to server!</p>
+              <p className="font-bold text-green-900 text-sm">Record saved successfully!</p>
               <p className="text-green-700 text-xs mt-0.5">
                 <span className="italic font-semibold">{lastAdded.plantName}</span> ({lastAdded.vendorNo}) has been
-                written to <code className="bg-green-100 px-1 rounded">Data.xlsx</code> and images saved to{" "}
-                <code className="bg-green-100 px-1 rounded">/public/plants/</code>. It will appear in the database immediately.
+                added to the database. Images are live on CDN.
               </p>
             </div>
             <div className="flex gap-2 shrink-0">
-              <button
-                onClick={() => router.push("/database")}
-                className="px-4 py-2 bg-green-700 hover:bg-green-600 text-white rounded-xl text-xs font-bold transition"
-              >
+              <button onClick={() => router.push("/database")}
+                className="px-4 py-2 bg-green-700 hover:bg-green-600 text-white rounded-xl text-xs font-bold transition">
                 View Database
               </button>
-              <button
-                onClick={resetAll}
-                className="px-4 py-2 bg-green-800 hover:bg-green-700 text-white rounded-xl text-xs font-bold transition"
-              >
+              <button onClick={resetAll}
+                className="px-4 py-2 bg-green-800 hover:bg-green-700 text-white rounded-xl text-xs font-bold transition">
                 Add Another
               </button>
             </div>
@@ -452,7 +475,7 @@ export default function AdminPage() {
 
         <form onSubmit={handleSubmit} className="space-y-6" noValidate>
 
-          {/* ── PLANT DETAILS CARD ──────────────────────────── */}
+          {/* Plant details */}
           <div className="bg-white rounded-2xl shadow-md border border-green-100 overflow-hidden">
             <div className="bg-green-900 px-6 py-4 flex items-center gap-3">
               <span className="text-xl">📋</span>
@@ -461,77 +484,62 @@ export default function AdminPage() {
                 <p className="text-green-300 text-[11px]">Fields marked with * are required</p>
               </div>
             </div>
-
             <div className="p-6 grid grid-cols-1 sm:grid-cols-2 gap-5">
               {FIELDS.filter(f => !f.textarea).map((field) => (
                 <div key={field.key}>
                   <label className="block text-xs font-bold uppercase tracking-widest text-green-800 mb-1.5">
-                    <span className="mr-1">{field.icon}</span>
-                    {field.label}
+                    <span className="mr-1">{field.icon}</span>{field.label}
                     {field.required && <span className="text-red-500 ml-1">*</span>}
                   </label>
-                  <input
-                    type="text"
-                    value={form[field.key]}
+                  <input type="text" value={form[field.key]}
                     onChange={(e) => setField(field.key, e.target.value)}
                     placeholder={field.placeholder}
                     className={`w-full px-4 py-2.5 border-2 rounded-xl text-sm text-gray-800 placeholder:text-gray-300 transition focus:outline-none focus:ring-4
-                      ${errors[field.key]
-                        ? "border-red-400 focus:ring-red-100 bg-red-50"
-                        : "border-gray-200 focus:border-green-600 focus:ring-green-100"
-                      }`}
+                      ${errors[field.key] ? "border-red-400 focus:ring-red-100 bg-red-50" : "border-gray-200 focus:border-green-600 focus:ring-green-100"}`}
                   />
                   {errors[field.key] && (
-                    <p className="text-red-500 text-xs mt-1 flex items-center gap-1">
-                      <span>⚠️</span> {errors[field.key]}
-                    </p>
+                    <p className="text-red-500 text-xs mt-1 flex items-center gap-1"><span>⚠️</span>{errors[field.key]}</p>
                   )}
                 </div>
               ))}
-
               {FIELDS.filter(f => f.textarea).map((field) => (
                 <div key={field.key} className="sm:col-span-2">
                   <label className="block text-xs font-bold uppercase tracking-widest text-green-800 mb-1.5">
-                    <span className="mr-1">{field.icon}</span>
-                    {field.label}
+                    <span className="mr-1">{field.icon}</span>{field.label}
                     {field.required && <span className="text-red-500 ml-1">*</span>}
                   </label>
-                  <textarea
-                    rows={4}
-                    value={form[field.key]}
+                  <textarea rows={4} value={form[field.key]}
                     onChange={(e) => setField(field.key, e.target.value)}
                     placeholder={field.placeholder}
                     className={`w-full px-4 py-2.5 border-2 rounded-xl text-sm text-gray-800 placeholder:text-gray-300 transition focus:outline-none focus:ring-4 resize-none leading-relaxed
-                      ${errors[field.key]
-                        ? "border-red-400 focus:ring-red-100 bg-red-50"
-                        : "border-gray-200 focus:border-green-600 focus:ring-green-100"
-                      }`}
+                      ${errors[field.key] ? "border-red-400 focus:ring-red-100 bg-red-50" : "border-gray-200 focus:border-green-600 focus:ring-green-100"}`}
                   />
                   {errors[field.key] && (
-                    <p className="text-red-500 text-xs mt-1 flex items-center gap-1">
-                      <span>⚠️</span> {errors[field.key]}
-                    </p>
+                    <p className="text-red-500 text-xs mt-1 flex items-center gap-1"><span>⚠️</span>{errors[field.key]}</p>
                   )}
                 </div>
               ))}
             </div>
           </div>
 
-          {/* ── IMAGE UPLOAD CARD ────────────────────────────── */}
+          {/* Image upload */}
           <div className="bg-white rounded-2xl shadow-md border border-green-100 overflow-hidden">
             <div className="bg-green-900 px-6 py-4 flex items-center gap-3">
               <span className="text-xl">🖼️</span>
               <div>
                 <h2 className="text-white font-bold text-sm">Plant Photography</h2>
-                <p className="text-green-300 text-[11px]">Upload field photo and/or herbarium sheet — saved directly to server</p>
+                <p className="text-green-300 text-[11px]">
+                  Images upload directly to CDN — no size limit restrictions
+                </p>
               </div>
             </div>
-
             <div className="p-6 grid grid-cols-1 sm:grid-cols-2 gap-6">
               {images.map((slot, idx) => (
                 <ImageUploader
                   key={slot.label}
                   slot={slot}
+                  uploadState={uploadStates[idx]}
+                  uploadPct={uploadPcts[idx]}
                   onChange={(file, preview) => updateImage(idx, file, preview)}
                 />
               ))}
@@ -544,19 +552,14 @@ export default function AdminPage() {
                   <p className="font-bold mb-1.5">Files will be saved as:</p>
                   <div className="space-y-1 font-mono text-[11px]">
                     <div className="bg-amber-100 rounded px-2 py-1.5 flex items-center gap-2">
-                      <span>📁</span>
-                      <span>/public/plants/<strong>{form.plantName.trim().replace(/[/\\?%*:|"<>]/g, "_")}</strong>.jpg</span>
+                      <span>🖼️</span>
+                      <span><strong>{form.plantName.trim().replace(/[/\\?%*:|"<>]/g, "_")}</strong>.jpg</span>
                       <span className="font-sans text-amber-500 ml-auto">field photo</span>
                     </div>
                     <div className="bg-amber-100 rounded px-2 py-1.5 flex items-center gap-2">
-                      <span>📁</span>
-                      <span>/public/plants/<strong>{form.plantName.trim().replace(/[/\\?%*:|"<>]/g, "_")}_Herbarium</strong>.jpg</span>
+                      <span>🌿</span>
+                      <span><strong>{form.plantName.trim().replace(/[/\\?%*:|"<>]/g, "_")}_Herbarium</strong>.jpg</span>
                       <span className="font-sans text-amber-500 ml-auto">herbarium</span>
-                    </div>
-                    <div className="bg-amber-100 rounded px-2 py-1.5 flex items-center gap-2">
-                      <span>📊</span>
-                      <span>/public/<strong>Data.xlsx</strong></span>
-                      <span className="font-sans text-amber-500 ml-auto">updated in-place</span>
                     </div>
                   </div>
                 </div>
@@ -564,15 +567,10 @@ export default function AdminPage() {
             )}
           </div>
 
-          {/* ── ACTION ROW ──────────────────────────────────── */}
+          {/* Actions */}
           <div className="flex flex-col sm:flex-row items-center gap-4">
-
-            <button
-              type="button"
-              onClick={resetAll}
-              disabled={submitting}
-              className="w-full sm:w-auto order-2 sm:order-1 px-6 py-3 border-2 border-gray-200 text-gray-600 hover:border-red-300 hover:text-red-600 rounded-xl text-sm font-semibold transition-colors disabled:opacity-40"
-            >
+            <button type="button" onClick={resetAll} disabled={submitting}
+              className="w-full sm:w-auto order-2 sm:order-1 px-6 py-3 border-2 border-gray-200 text-gray-600 hover:border-red-300 hover:text-red-600 rounded-xl text-sm font-semibold transition-colors disabled:opacity-40">
               Clear Form
             </button>
 
@@ -591,17 +589,14 @@ export default function AdminPage() {
               ))}
             </div>
 
-            <button
-              type="submit"
-              disabled={submitting}
-              className="w-full sm:w-auto order-1 sm:order-3 relative overflow-hidden px-8 py-3.5 bg-green-800 hover:bg-green-700 disabled:opacity-60 disabled:cursor-not-allowed text-white rounded-xl text-sm font-bold transition-all shadow-lg hover:shadow-green-200 hover:-translate-y-0.5 active:translate-y-0 flex items-center justify-center gap-2"
-            >
+            <button type="submit" disabled={submitting}
+              className="w-full sm:w-auto order-1 sm:order-3 relative overflow-hidden px-8 py-3.5 bg-green-800 hover:bg-green-700 disabled:opacity-60 disabled:cursor-not-allowed text-white rounded-xl text-sm font-bold transition-all shadow-lg hover:shadow-green-200 hover:-translate-y-0.5 active:translate-y-0 flex items-center justify-center gap-2">
               {submitting ? (
                 <>
                   <svg className="w-4 h-4 animate-spin" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" d="M12 3v3m0 12v3m9-9h-3M6 12H3" />
                   </svg>
-                  Saving to server…
+                  {uploadStates.some(s => s === "uploading") ? "Uploading images…" : "Saving to database…"}
                 </>
               ) : (
                 <>
@@ -617,17 +612,11 @@ export default function AdminPage() {
         </form>
       </div>
 
-      {toast && (
-        <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />
-      )}
+      {toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}
 
       <footer className="mt-12 bg-green-950 text-gray-500 py-6 text-center text-xs">
-        <p>
-          &copy; {new Date().getFullYear()} Trident Academy of Creative Technology, BBSR
-          &amp; IKS Division, Govt. of India — Admin Panel
-        </p>
+        <p>&copy; {new Date().getFullYear()} Trident Academy of Creative Technology, BBSR &amp; IKS Division, Govt. of India — Admin Panel</p>
       </footer>
-
     </div>
   );
 }
