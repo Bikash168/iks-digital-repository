@@ -482,25 +482,6 @@ export default function DatabasePage() {
     setCurrentPage(1);
   }
 
-  function exportCSV() {
-    if (!sorted.length) return;
-    const rows = sorted.map((p) => ({
-      "Voucher No.": p.vendorNo,
-      "Plant Name": p.plantName,
-      Family: p.family,
-      "Therapeutic Use": p.ethnobotanicalUse,
-    }));
-    const csv = [
-      Object.keys(rows[0]).join(","),
-      ...rows.map((r) => Object.values(r).map((v) => `"${v}"`).join(",")),
-    ].join("\n");
-    const a = document.createElement("a");
-    a.href = URL.createObjectURL(new Blob([csv], { type: "text/csv" }));
-    a.download = `ethno-medicinal-plants-${new Date().toISOString().split("T")[0]}.csv`;
-    a.click();
-    URL.revokeObjectURL(a.href);
-  }
-
   function pageNumbers(): (number | "…")[] {
     const nums = Array.from({ length: totalPages }, (_, i) => i + 1);
     return nums
@@ -538,14 +519,13 @@ export default function DatabasePage() {
           </div>
 
           <button
-            onClick={exportCSV}
-            disabled={sorted.length === 0}
-            className="flex items-center gap-1.5 px-3 py-1.5 bg-green-800 hover:bg-green-700 disabled:opacity-40 text-white rounded-lg text-xs font-semibold transition-colors shadow-sm"
+            onClick={() => router.push("/login")}
+            className="flex items-center gap-1.5 px-3 py-1.5 bg-green-800 hover:bg-green-700 text-white rounded-lg text-xs font-semibold transition-colors shadow-sm"
           >
             <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2M7 10l5 5m0 0l5-5m-5 5V4" />
+              <path strokeLinecap="round" strokeLinejoin="round" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1" />
             </svg>
-            <span className="hidden sm:inline">Export CSV</span>
+            <span className="hidden sm:inline">Admin Login</span>
           </button>
         </div>
       </nav>
