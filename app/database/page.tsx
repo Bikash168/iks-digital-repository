@@ -16,6 +16,10 @@ type Plant = {
   family: string;
   ethnobotanicalUse: string;
   photo: string;
+  localName: string;
+  habitat: string;
+  collectionArea: string;
+  plantPartsUsed: string;
 };
 
 // ─── Image helper ─────────────────────────────────────────────
@@ -258,6 +262,29 @@ export default function DatabasePage() {
             row["Use"] ??
             "",
           photo: row["Photo"] ?? row["photo"] ?? row["Image"] ?? "",
+          localName:
+            row["Local Name"] ??
+            row["LocalName"] ??
+            row["local_name"] ??
+            row["Common Name"] ??
+            "",
+          habitat:
+            row["Habitat"] ??
+            row["habitat"] ??
+            "",
+          collectionArea:
+            row["Collection Area"] ??
+            row["CollectionArea"] ??
+            row["collection_area"] ??
+            row["Location"] ??
+            "",
+          plantPartsUsed:
+            row["Plant Parts Used"] ??
+            row["PlantPartsUsed"] ??
+            row["plant_parts_used"] ??
+            row["Parts Used"] ??
+            row["Parts"] ??
+            "",
         }));
 
         setData(plants);
@@ -836,6 +863,11 @@ export default function DatabasePage() {
                 <h2 className="text-2xl font-bold text-green-900 italic leading-tight">
                   {selectedPlant.plantName}
                 </h2>
+                {selectedPlant.localName && (
+                  <p className="text-sm text-gray-500 mt-0.5">
+                    🏷️ <span className="font-medium">{selectedPlant.localName}</span>
+                  </p>
+                )}
                 <p className="text-xs text-gray-400 font-mono mt-1">
                   Voucher No: {selectedPlant.vendorNo}
                 </p>
@@ -850,9 +882,45 @@ export default function DatabasePage() {
                 </span>
               </div>
 
+              {/* Info grid: Habitat, Collection Area, Parts Used */}
+              {(selectedPlant.habitat || selectedPlant.collectionArea || selectedPlant.plantPartsUsed) && (
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                  {selectedPlant.habitat && (
+                    <div className="bg-blue-50 border border-blue-100 rounded-xl p-3">
+                      <p className="text-[10px] font-bold uppercase tracking-widest text-blue-600 mb-1 flex items-center gap-1">
+                        🌍 Habitat
+                      </p>
+                      <p className="text-sm text-gray-700 leading-snug">
+                        {selectedPlant.habitat}
+                      </p>
+                    </div>
+                  )}
+                  {selectedPlant.collectionArea && (
+                    <div className="bg-amber-50 border border-amber-100 rounded-xl p-3">
+                      <p className="text-[10px] font-bold uppercase tracking-widest text-amber-600 mb-1 flex items-center gap-1">
+                        📍 Collection Area
+                      </p>
+                      <p className="text-sm text-gray-700 leading-snug">
+                        {selectedPlant.collectionArea}
+                      </p>
+                    </div>
+                  )}
+                  {selectedPlant.plantPartsUsed && (
+                    <div className="bg-purple-50 border border-purple-100 rounded-xl p-3">
+                      <p className="text-[10px] font-bold uppercase tracking-widest text-purple-600 mb-1 flex items-center gap-1">
+                        🌿 Plant Parts Used
+                      </p>
+                      <p className="text-sm text-gray-700 leading-snug">
+                        {selectedPlant.plantPartsUsed}
+                      </p>
+                    </div>
+                  )}
+                </div>
+              )}
+
               <div className="bg-green-50 rounded-xl p-4 border border-green-100">
                 <p className="text-xs font-bold uppercase tracking-widest text-green-700 mb-2">
-                  Therapeutic Use
+                  🩺 Therapeutic Use
                 </p>
                 <p className="text-sm text-gray-700 leading-relaxed">
                   {selectedPlant.ethnobotanicalUse}
