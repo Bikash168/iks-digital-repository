@@ -54,53 +54,52 @@ function getPlantImageCandidates(photo: string, plantName: string): string[] {
 }
 
 // ─── Hook: resolve plant images ───────────────────────────────
-// Returns { fieldPhoto, herbariumPhoto, loading }
+// Streams images as they resolve — no waiting for all candidates.
+// Each successful load immediately updates state so UI renders progressively.
 
 function usePlantImages(photo: string, plantName: string) {
   const candidates = getPlantImageCandidates(photo, plantName);
-  const [resolved, setResolved] = useState<string[] | null>(
-    candidates.length === 0 ? [] : null
+
+  // Map of idx → src for resolved images; null = still probing
+  const [resolvedMap, setResolvedMap] = useState<Record<number, string> | null>(
+    candidates.length === 0 ? {} : null
   );
 
   useEffect(() => {
     let cancelled = false;
-    if (candidates.length === 0) { setResolved([]); return; }
-    setResolved(null);
+    if (candidates.length === 0) { setResolvedMap({}); return; }
 
-    let settled = 0;
-    const good: Array<{ idx: number; src: string }> = [];
-    const total = candidates.length;
+    // Open modal immediately with no images — they stream in
+    setResolvedMap({});
 
     candidates.forEach((src, idx) => {
       const img = new window.Image();
       img.onload = () => {
         if (cancelled) return;
-        good.push({ idx, src });
-        settled++;
-        if (settled === total) {
-          good.sort((a, b) => a.idx - b.idx);
-          setResolved(good.map((g) => g.src));
-        }
+        // Add this image to the map as soon as it loads
+        setResolvedMap((prev) => ({ ...(prev ?? {}), [idx]: src }));
       };
-      img.onerror = () => {
-        if (cancelled) return;
-        settled++;
-        if (settled === total) {
-          good.sort((a, b) => a.idx - b.idx);
-          setResolved(good.map((g) => g.src));
-        }
-      };
+      // onerror: just ignore — entry stays absent from map
       img.src = src;
     });
+
     return () => { cancelled = true; };
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [photo, plantName]);
 
-  const herbariumSrcs = (resolved ?? []).filter(s => s.includes("_Herbarium"));
-  const fieldSrcs = (resolved ?? []).filter(s => !s.includes("_Herbarium"));
+  // Build ordered resolved list from map
+  const resolved = resolvedMap
+    ? Object.entries(resolvedMap)
+        .sort(([a], [b]) => Number(a) - Number(b))
+        .map(([, src]) => src)
+    : [];
+
+  const herbariumSrcs = resolved.filter(s => s.includes("_Herbarium"));
+  const fieldSrcs = resolved.filter(s => !s.includes("_Herbarium"));
 
   return {
-    loading: resolved === null,
+    // Still "loading" only while map is null (first paint before any probe fires)
+    loading: resolvedMap === null,
     fieldPhoto: fieldSrcs[0] ?? null,
     herbariumPhoto: herbariumSrcs[0] ?? null,
   };
@@ -243,21 +242,18 @@ function PlantModal({
         {/* ── Two-column body ─────────────────────────────────── */}
         <div className="overflow-y-auto flex-1">
 
-          {/* Loading skeleton */}
-          {loading && (
-            <div className="w-full bg-green-50 animate-pulse flex items-center justify-center" style={{ height: "420px" }}>
-              <span className="text-green-300 text-5xl">🌿</span>
-            </div>
-          )}
-
-          {!loading && (
-            <div className="flex flex-col sm:flex-row" style={{ minHeight: "520px" }}>
+          {/* Two-column body — opens instantly, images stream in */}
+          <div className="flex flex-col sm:flex-row" style={{ minHeight: "520px" }}>
 
               {/* ── LEFT COLUMN: Field photo + description ─── */}
               <div className="flex flex-col sm:w-[58%] border-b sm:border-b-0 sm:border-r border-green-100">
 
-                {/* Field photo */}
-                {fieldPhoto ? (
+                {/* Field photo — shimmer while probing, image when ready, placeholder if none */}
+                {loading ? (
+                  <div className="relative overflow-hidden shrink-0 bg-green-50 animate-pulse flex items-center justify-center" style={{ height: "320px" }}>
+                    <span className="text-green-200 text-4xl">📷</span>
+                  </div>
+                ) : fieldPhoto ? (
                   <div className="relative overflow-hidden shrink-0" style={{ height: "320px" }}>
                     <img
                       src={fieldPhoto}
@@ -271,7 +267,7 @@ function PlantModal({
                 ) : (
                   <div
                     className="relative overflow-hidden shrink-0 bg-gray-50 flex flex-col items-center justify-center gap-2"
-                    style={{ height: "200px" }}
+                    style={{ height: "160px" }}
                   >
                     <span className="text-5xl opacity-20">📷</span>
                     <p className="text-[11px] font-bold text-gray-300 uppercase tracking-widest">
@@ -356,7 +352,11 @@ function PlantModal({
               {/* ── RIGHT COLUMN: Full-height herbarium photo ─ */}
               <div className="sm:w-[42%] flex flex-col">
 
-                {herbariumPhoto ? (
+                {loading ? (
+                  <div className="flex-1 bg-amber-50/60 animate-pulse flex flex-col items-center justify-center gap-3" style={{ minHeight: "420px" }}>
+                    <span className="text-amber-200 text-5xl">🌿</span>
+                  </div>
+                ) : herbariumPhoto ? (
                   <div className="relative flex-1 overflow-hidden" style={{ minHeight: "420px" }}>
                     <img
                       src={herbariumPhoto}
@@ -366,12 +366,9 @@ function PlantModal({
                     <span className="absolute bottom-3 left-3 bg-black/55 text-white text-[10px] font-bold px-2.5 py-1 rounded-full uppercase tracking-wider">
                       Herbarium Sheet
                     </span>
-                    {/* Subtle parchment overlay for herbarium aesthetic */}
                     <div
                       className="absolute inset-0 pointer-events-none"
-                      style={{
-                        background: "linear-gradient(to bottom, transparent 70%, rgba(250,249,245,0.4) 100%)",
-                      }}
+                      style={{ background: "linear-gradient(to bottom, transparent 70%, rgba(250,249,245,0.4) 100%)" }}
                     />
                   </div>
                 ) : (
@@ -386,7 +383,6 @@ function PlantModal({
               </div>
 
             </div>
-          )}
 
         </div>
       </div>
