@@ -19,55 +19,58 @@ type Plant = {
 };
 
 // ─── Image helper ─────────────────────────────────────────────
+// Returns candidate URLs to probe.
+// Uses `photo` field first; falls back to `plantName` for the filename.
+// If both are empty, returns [] → component shows nothing.
 
 function getPlantImageCandidates(photo: string, plantName: string): string[] {
-  const source = (photo || plantName || "").trim();
-  if (!source) return ["/hero-plant.png"];
-
-  if (
-    source.startsWith("http://") ||
-    source.startsWith("https://") ||
-    source.startsWith("/")
-  ) {
-    return [source, "/hero-plant.png"];
-  }
-
   const exts = [".jpg", ".jpeg", ".png", ".webp", ".gif"];
-  const hasExt = /\.(jpe?g|png|webp|gif)$/i.test(source);
-  const base = source.replace(/\.(jpe?g|png|webp|gif)$/i, "").trim();
 
-  function variants(name: string): string[] {
-    const n = name.replace(/\s+/g, " ").replace(/\.+$/, "").trim();
-    const out: string[] = [];
-    if (hasExt) {
-      out.push(`/plants/${encodeURIComponent(n)}`);
-    } else {
-      for (const ext of exts) {
-        out.push(`/plants/${encodeURIComponent(n + ext)}`);
-      }
+  // Build candidate URLs for a given source string.
+  // Always tries both the base name AND the _Herbarium sibling.
+  function buildCandidates(source: string): string[] {
+    const s = source.trim();
+    if (!s) return [];
+
+    // Already a full URL or absolute path — use directly, no variants
+    if (s.startsWith("http://") || s.startsWith("https://") || s.startsWith("/")) {
+      return [s];
     }
-    return out;
+
+    const hasExt = /\.(jpe?g|png|webp|gif)$/i.test(s);
+    const base = s.replace(/\.(jpe?g|png|webp|gif)$/i, "").trim();
+
+    // Try all extensions for a given basename
+    function tryName(name: string): string[] {
+      if (!name) return [];
+      if (hasExt) return [`/plants/${encodeURIComponent(name)}`];
+      return exts.map((ext) => `/plants/${encodeURIComponent(name + ext)}`);
+    }
+
+    return [
+      ...tryName(s),                         // base: Acalypha indica.jpg / .png …
+      ...tryName(`${base}_Herbarium`),        // sibling: Acalypha indica_Herbarium.jpg …
+    ];
   }
 
-  const all = [...variants(source)];
+  // Primary: use photo field value
+  const fromPhoto = buildCandidates(photo);
+  if (fromPhoto.length > 0) return [...new Set(fromPhoto)];
 
-  if (!/\(2\)$/i.test(base)) {
-    all.push(...variants(`${base} (2)`));
-  }
-  const noTwo = base.replace(/\s*\(2\)$/, "").trim();
-  if (noTwo && noTwo !== base) {
-    all.push(...variants(noTwo));
-  }
+  // Secondary: use plant name as filename (images named after the plant)
+  const fromName = buildCandidates(plantName);
+  if (fromName.length > 0) return [...new Set(fromName)];
 
-  all.push("/hero-plant.png");
-  return [...new Set(all)];
+  return []; // nothing to try → show nothing
 }
 
 // ─── PlantImageGrid ───────────────────────────────────────────
-// Shows all resolved images in a grid:
-//   1 image  → full-width, tall
-//   2 images → side by side, equal width
-//   3+       → first image full-width, rest in a row below
+// • Probes every candidate URL via Image() objects
+// • Shows only images that actually load (HTTP 200 + parseable)
+// • If 0 images load → renders nothing (no placeholder)
+// • 1 image  → full-width
+// • 2 images → side-by-side equal columns
+// • 3+       → first full-width, rest in a row below
 
 function PlantImageGrid({
   photo,
@@ -76,88 +79,101 @@ function PlantImageGrid({
   photo: string;
   plantName: string;
 }) {
-  const allCandidates = getPlantImageCandidates(photo, plantName);
+  const candidates = getPlantImageCandidates(photo, plantName);
 
-  // Track which candidate indices have successfully loaded
-  const [loaded, setLoaded] = useState<number[]>([]);
-  // Track which have errored so we skip them
-  const [errored, setErrored] = useState<Set<number>>(new Set());
-
-  useEffect(() => {
-    setLoaded([]);
-    setErrored(new Set());
-  }, [photo, plantName]);
-
-  // Pre-probe all candidates (excluding the fallback "/hero-plant.png")
-  // so we know exactly how many real images exist before rendering.
-  const probeTargets = allCandidates.filter((s) => s !== "/hero-plant.png");
+  // null  = still probing
+  // []    = all failed / no candidates
+  // [...] = resolved good srcs
+  const [resolved, setResolved] = useState<string[] | null>(
+    candidates.length === 0 ? [] : null
+  );
 
   useEffect(() => {
-    if (probeTargets.length === 0) return;
-    probeTargets.forEach((src, i) => {
+    let cancelled = false;
+
+    if (candidates.length === 0) {
+      setResolved([]);
+      return;
+    }
+
+    setResolved(null); // show skeleton while probing
+
+    let settled = 0;
+    const good: Array<{ idx: number; src: string }> = [];
+    const total = candidates.length;
+
+    candidates.forEach((src, idx) => {
       const img = new window.Image();
-      img.onload = () =>
-        setLoaded((prev) =>
-          prev.includes(i) ? prev : [...prev, i].sort((a, b) => a - b)
-        );
-      img.onerror = () =>
-        setErrored((prev) => {
-          const next = new Set(prev);
-          next.add(i);
-          return next;
-        });
+
+      img.onload = () => {
+        if (cancelled) return;
+        good.push({ idx, src });
+        settled++;
+        if (settled === total) {
+          good.sort((a, b) => a.idx - b.idx);
+          setResolved(good.map((g) => g.src));
+        }
+      };
+
+      img.onerror = () => {
+        if (cancelled) return;
+        settled++;
+        if (settled === total) {
+          good.sort((a, b) => a.idx - b.idx);
+          setResolved(good.map((g) => g.src));
+        }
+      };
+
       img.src = src;
     });
+
+    return () => { cancelled = true; };
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [photo, plantName]);
 
-  // Build the final display list from successfully loaded probes
-  const displaySrcs: string[] =
-    loaded.length > 0
-      ? loaded.map((i) => probeTargets[i])
-      : errored.size === probeTargets.length && probeTargets.length > 0
-      ? ["/hero-plant.png"]
-      : probeTargets.length > 0
-      ? [] // still probing — show skeleton
-      : ["/hero-plant.png"];
-
   // Still probing
-  if (displaySrcs.length === 0) {
+  if (resolved === null) {
     return (
-      <div className="w-full h-72 rounded-xl bg-green-50 border border-green-100 animate-pulse flex items-center justify-center">
+      <div className="w-full h-64 rounded-xl bg-green-50 border border-green-100 animate-pulse flex items-center justify-center">
         <span className="text-green-300 text-4xl">🌿</span>
       </div>
     );
   }
 
-  const count = displaySrcs.length;
+  // No images resolved → render nothing
+  if (resolved.length === 0) {
+    return null;
+  }
 
-  // ── 1 image: full width, tall
+  const count = resolved.length;
+
+  // ── 1 image: full width
   if (count === 1) {
     return (
       <div className="w-full rounded-xl overflow-hidden border border-green-100 shadow-sm">
         <img
-          src={displaySrcs[0]}
+          src={resolved[0]}
           alt={plantName}
-          className="w-full h-80 object-cover"
+          className="w-full h-72 object-cover"
         />
       </div>
     );
   }
 
-  // ── 2 images: side by side
+  // ── 2 images: side by side, equal height
   if (count === 2) {
     return (
       <div className="grid grid-cols-2 gap-2">
-        {displaySrcs.map((src, i) => (
+        {resolved.map((src, i) => (
           <div
             key={i}
             className="rounded-xl overflow-hidden border border-green-100 shadow-sm"
+            style={{ height: "260px" }}
           >
             <img
               src={src}
               alt={`${plantName} ${i + 1}`}
-              className="w-full h-64 object-cover"
+              className="w-full h-full object-cover"
             />
           </div>
         ))}
@@ -166,7 +182,7 @@ function PlantImageGrid({
   }
 
   // ── 3+ images: first full-width, rest in a row
-  const [first, ...rest] = displaySrcs;
+  const [first, ...rest] = resolved;
   return (
     <div className="space-y-2">
       <div className="rounded-xl overflow-hidden border border-green-100 shadow-sm">
@@ -176,16 +192,20 @@ function PlantImageGrid({
           className="w-full h-72 object-cover"
         />
       </div>
-      <div className={`grid gap-2 grid-cols-${Math.min(rest.length, 3)}`}>
+      <div
+        className="grid gap-2"
+        style={{ gridTemplateColumns: `repeat(${Math.min(rest.length, 3)}, 1fr)` }}
+      >
         {rest.map((src, i) => (
           <div
             key={i}
             className="rounded-xl overflow-hidden border border-green-100 shadow-sm"
+            style={{ height: "160px" }}
           >
             <img
               src={src}
               alt={`${plantName} ${i + 2}`}
-              className="w-full h-40 object-cover"
+              className="w-full h-full object-cover"
             />
           </div>
         ))}
