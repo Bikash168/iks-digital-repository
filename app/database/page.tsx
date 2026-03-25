@@ -63,70 +63,133 @@ function getPlantImageCandidates(photo: string, plantName: string): string[] {
   return [...new Set(all)];
 }
 
-// ─── PlantImageCarousel ───────────────────────────────────────
+// ─── PlantImageGrid ───────────────────────────────────────────
+// Shows all resolved images in a grid:
+//   1 image  → full-width, tall
+//   2 images → side by side, equal width
+//   3+       → first image full-width, rest in a row below
 
-function PlantImageCarousel({
+function PlantImageGrid({
   photo,
   plantName,
-  className,
 }: {
   photo: string;
   plantName: string;
-  className?: string;
 }) {
-  const candidates = getPlantImageCandidates(photo, plantName);
-  const [index, setIndex] = useState(0);
+  const allCandidates = getPlantImageCandidates(photo, plantName);
+
+  // Track which candidate indices have successfully loaded
+  const [loaded, setLoaded] = useState<number[]>([]);
+  // Track which have errored so we skip them
+  const [errored, setErrored] = useState<Set<number>>(new Set());
 
   useEffect(() => {
-    setIndex(0);
+    setLoaded([]);
+    setErrored(new Set());
   }, [photo, plantName]);
 
-  const idx = Math.min(index, candidates.length - 1);
+  // Pre-probe all candidates (excluding the fallback "/hero-plant.png")
+  // so we know exactly how many real images exist before rendering.
+  const probeTargets = allCandidates.filter((s) => s !== "/hero-plant.png");
 
+  useEffect(() => {
+    if (probeTargets.length === 0) return;
+    probeTargets.forEach((src, i) => {
+      const img = new window.Image();
+      img.onload = () =>
+        setLoaded((prev) =>
+          prev.includes(i) ? prev : [...prev, i].sort((a, b) => a - b)
+        );
+      img.onerror = () =>
+        setErrored((prev) => {
+          const next = new Set(prev);
+          next.add(i);
+          return next;
+        });
+      img.src = src;
+    });
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [photo, plantName]);
+
+  // Build the final display list from successfully loaded probes
+  const displaySrcs: string[] =
+    loaded.length > 0
+      ? loaded.map((i) => probeTargets[i])
+      : errored.size === probeTargets.length && probeTargets.length > 0
+      ? ["/hero-plant.png"]
+      : probeTargets.length > 0
+      ? [] // still probing — show skeleton
+      : ["/hero-plant.png"];
+
+  // Still probing
+  if (displaySrcs.length === 0) {
+    return (
+      <div className="w-full h-72 rounded-xl bg-green-50 border border-green-100 animate-pulse flex items-center justify-center">
+        <span className="text-green-300 text-4xl">🌿</span>
+      </div>
+    );
+  }
+
+  const count = displaySrcs.length;
+
+  // ── 1 image: full width, tall
+  if (count === 1) {
+    return (
+      <div className="w-full rounded-xl overflow-hidden border border-green-100 shadow-sm">
+        <img
+          src={displaySrcs[0]}
+          alt={plantName}
+          className="w-full h-80 object-cover"
+        />
+      </div>
+    );
+  }
+
+  // ── 2 images: side by side
+  if (count === 2) {
+    return (
+      <div className="grid grid-cols-2 gap-2">
+        {displaySrcs.map((src, i) => (
+          <div
+            key={i}
+            className="rounded-xl overflow-hidden border border-green-100 shadow-sm"
+          >
+            <img
+              src={src}
+              alt={`${plantName} ${i + 1}`}
+              className="w-full h-64 object-cover"
+            />
+          </div>
+        ))}
+      </div>
+    );
+  }
+
+  // ── 3+ images: first full-width, rest in a row
+  const [first, ...rest] = displaySrcs;
   return (
-    <div className="relative">
-      <img
-        src={candidates[idx]}
-        alt={plantName}
-        className={className}
-        onError={() =>
-          setIndex((i) => (i < candidates.length - 1 ? i + 1 : i))
-        }
-      />
-
-      {candidates.length > 1 && (
-        <>
-          <div className="absolute inset-x-0 top-2 flex justify-between px-4">
-            <button
-              onClick={() => setIndex((i) => Math.max(0, i - 1))}
-              disabled={idx === 0}
-              className="rounded-full bg-black/40 text-white p-2 hover:bg-black/60 transition disabled:opacity-30"
-            >
-              ‹
-            </button>
-            <button
-              onClick={() =>
-                setIndex((i) => Math.min(candidates.length - 1, i + 1))
-              }
-              disabled={idx === candidates.length - 1}
-              className="rounded-full bg-black/40 text-white p-2 hover:bg-black/60 transition disabled:opacity-30"
-            >
-              ›
-            </button>
+    <div className="space-y-2">
+      <div className="rounded-xl overflow-hidden border border-green-100 shadow-sm">
+        <img
+          src={first}
+          alt={`${plantName} 1`}
+          className="w-full h-72 object-cover"
+        />
+      </div>
+      <div className={`grid gap-2 grid-cols-${Math.min(rest.length, 3)}`}>
+        {rest.map((src, i) => (
+          <div
+            key={i}
+            className="rounded-xl overflow-hidden border border-green-100 shadow-sm"
+          >
+            <img
+              src={src}
+              alt={`${plantName} ${i + 2}`}
+              className="w-full h-40 object-cover"
+            />
           </div>
-
-          <div className="absolute bottom-2 left-1/2 -translate-x-1/2 flex gap-1.5">
-            {candidates.map((_, i) => (
-              <span
-                key={i}
-                className={`h-2 w-2 rounded-full ${
-                  i === idx ? "bg-white" : "bg-white/40"
-                }`}
-              />
-            ))}
-          </div>
-        </>
-      )}
+        ))}
+      </div>
     </div>
   );
 }
@@ -723,12 +786,12 @@ export default function DatabasePage() {
       {/* ── PLANT DETAIL MODAL ──────────────────────────────── */}
       {selectedPlant !== null && (
         <div
-          className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-end sm:items-center justify-center z-50 p-4"
+          className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-end sm:items-center justify-center z-50 p-2 sm:p-6"
           onClick={(e) => {
             if (e.target === e.currentTarget) setSelectedPlant(null);
           }}
         >
-          <div className="bg-white rounded-t-3xl sm:rounded-2xl w-full max-w-lg shadow-2xl relative max-h-[92vh] overflow-y-auto">
+          <div className="bg-white rounded-t-3xl sm:rounded-2xl w-full max-w-2xl shadow-2xl relative max-h-[95vh] overflow-y-auto">
 
             {/* Modal header */}
             <div className="sticky top-0 bg-white border-b border-green-100 px-6 py-4 flex items-center justify-between rounded-t-3xl sm:rounded-t-2xl z-10">
@@ -744,10 +807,9 @@ export default function DatabasePage() {
             </div>
 
             <div className="p-6 space-y-5">
-              <PlantImageCarousel
+              <PlantImageGrid
                 photo={selectedPlant.photo}
                 plantName={selectedPlant.plantName}
-                className="w-full h-52 sm:h-64 object-cover rounded-xl"
               />
 
               <div>
