@@ -684,7 +684,7 @@ export default function Home() {
             {[
               { emoji: "🌿", value: totalPlants, label: "Total Plants" },
               { emoji: "🏠", value: uniqueFamiliesCount, label: "Families" },
-              { emoji: "💊", value: 153, label: "Therapeutic Uses" },
+              { emoji: "💊", value: 187, label: "Therapeutic Uses" },
               { emoji: "📍", value: "Eastern Odisha", label: "Region" },
             ].map(({ emoji, value, label }) => (
               <div
