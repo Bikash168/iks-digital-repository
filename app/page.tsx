@@ -18,7 +18,7 @@ type Plant = {
 // ─── Constants ────────────────────────────────────────────────────────────────
 
 const NAVBAR_HEIGHT = 130;
-const NAV_SECTIONS = ["home", "about", "project", "database", "gallery", "contact"] as const;
+const NAV_SECTIONS = ["home", "about", "project", "database", "conservation", "dissemination", "gallery", "contact"] as const;
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -377,99 +377,75 @@ export default function Home() {
     <main className="font-serif bg-[#f8f6f1]">
 
       {/* ── NAVBAR ───────────────────────────────────────────────────────────── */}
-      <nav className="fixed top-0 w-full bg-white shadow-md z-50">
-        <div className="max-w-7xl mx-auto flex items-center justify-between px-6 md:px-8 py-3 md:py-4">
+<nav className="fixed top-0 w-full bg-white shadow-md z-50">
+  <div className="max-w-7xl mx-auto flex items-center justify-between px-4 md:px-8 py-2 md:py-3">
 
-          {/* LEFT SECTION */}
-          <div className="flex flex-col md:flex-row items-center md:items-center gap-2 md:gap-6 pb-2 md:pb-0 md:pr-6 md:border-r border-green-200">
+    {/* LEFT SECTION */}
+    <div className="flex items-center gap-2 md:gap-4 pr-4 md:pr-6 border-r border-green-200">
 
-            {/* Logos */}
-            <div className="flex items-center gap-3 md:gap-4 md:pr-4 md:border-r border-green-200">
-              <Image
-                src="/logo1.png"
-                alt="TACT Logo"
-                width={90}
-                height={90}
-                className="w-8 h-8 md:w-14 md:h-14 lg:w-18 lg:h-18 object-contain"
-              />
-              <Image
-                src="/logo2.png"
-                alt="IKS Logo"
-                width={110}
-                height={110}
-                className="w-9 h-9 md:w-15 md:h-15 lg:w-20 lg:h-20 object-contain"
-              />
-              <Image
-                src="/logo3.svg"
-                alt="Government Logo"
-                width={110}
-                height={110}
-                className="w-9 h-9 md:w-15 md:h-15 lg:w-20 lg:h-20 object-contain"
-              />
-            </div>
+      {/* Logos — reduced sizes */}
+      <Image src="/logo1.png" alt="TACT Logo" width={48} height={48} className="w-10 h-10 md:w-12 md:h-12 object-contain" />
+<Image src="/logo2.png" alt="IKS Logo"  width={48} height={48} className="w-10 h-10 md:w-12 md:h-12 object-contain" />
+<Image src="/logo3.svg" alt="Govt Logo" width={48} height={48} className="w-10 h-10 md:w-12 md:h-12 object-contain" />
 
-            {/* Mobile Divider */}
-            <div className="w-full border-t border-green-200 md:hidden" />
+      {/* Divider */}
+      <div className="hidden md:block w-px h-8 bg-green-200 mx-1" />
 
-            {/* Title */}
-            <div className="flex flex-col justify-center md:pl-4 text-center md:text-left">
-              <span className="text-sm md:text-lg font-semibold text-green-900 leading-tight">
-                IKS Digital Repository
-              </span>
-              <span className="text-[11px] md:text-xs text-green-600">
-                Ethno-medicinal knowledge
-              </span>
-            </div>
+      {/* Title — single line */}
+      <div className="hidden md:flex flex-col justify-center">
+        <span className="text-sm lg:text-base font-semibold text-green-900 whitespace-nowrap leading-tight">
+          IKS Digital Repository
+        </span>
+        <span className="text-[10px] lg:text-xs text-green-600 whitespace-nowrap">
+          Ethno-medicinal knowledge
+        </span>
+      </div>
+    </div>
 
-          </div>
+    {/* Mobile title */}
+    <div className="flex md:hidden flex-col justify-center px-2">
+      <span className="text-xs font-semibold text-green-900 leading-tight">IKS Digital Repository</span>
+    </div>
 
-          {/* DESKTOP MENU */}
-          <div className="hidden md:flex items-center gap-10 text-[16px] font-semibold text-green-800">
-            {navItem("home", "Home")}
-            {navItem("about", "About")}
-            {navItem("project", "Project")}
-            {navItem("database", "Database")}
-            {navItem("gallery", "Gallery")}
-            {navItem("contact", "Contact")}
-          </div>
+    {/* DESKTOP MENU */}
+    <div className="hidden md:flex items-center gap-4 lg:gap-7 text-[13px] lg:text-[14px] font-semibold text-green-800">
+      {navItem("home", "Home")}
+      {navItem("about", "About")}
+      {navItem("project", "Project")}
+      {navItem("database", "Database")}
+      {navItem("conservation", "Conservation")}
+      {navItem("dissemination", "Dissemination")}
+      {navItem("gallery", "Gallery")}
+      {navItem("contact", "Contact")}
+    </div>
 
-          {/* MOBILE HAMBURGER */}
-          <button
-            className="md:hidden flex flex-col items-center justify-center gap-1.5 p-2 rounded-xl border border-green-200 shadow-sm"
-            onClick={() => setMenuOpen((prev) => !prev)}
-            aria-label="Toggle menu"
-          >
-            <span
-              className={`block w-6 h-0.5 bg-green-800 transition-all duration-300 origin-center ${
-                menuOpen ? "rotate-45 translate-y-2" : ""
-              }`}
-            />
-            <span
-              className={`block w-6 h-0.5 bg-green-800 transition-all duration-300 ${
-                menuOpen ? "opacity-0" : ""
-              }`}
-            />
-            <span
-              className={`block w-6 h-0.5 bg-green-800 transition-all duration-300 origin-center ${
-                menuOpen ? "-rotate-45 -translate-y-2" : ""
-              }`}
-            />
-          </button>
+    {/* MOBILE HAMBURGER */}
+    <button
+      className="md:hidden flex flex-col items-center justify-center gap-1.5 p-2 rounded-xl border border-green-200 shadow-sm"
+      onClick={() => setMenuOpen((prev) => !prev)}
+      aria-label="Toggle menu"
+    >
+      <span className={`block w-6 h-0.5 bg-green-800 transition-all duration-300 origin-center ${menuOpen ? "rotate-45 translate-y-2" : ""}`} />
+      <span className={`block w-6 h-0.5 bg-green-800 transition-all duration-300 ${menuOpen ? "opacity-0" : ""}`} />
+      <span className={`block w-6 h-0.5 bg-green-800 transition-all duration-300 origin-center ${menuOpen ? "-rotate-45 -translate-y-2" : ""}`} />
+    </button>
 
-        </div>
+  </div>
 
-        {/* MOBILE MENU */}
-        {menuOpen && (
-          <div className="md:hidden bg-white border-t border-green-100 shadow-lg px-6 py-4 flex flex-col gap-4 text-[15px] font-semibold">
-            {navItem("home", "Home")}
-            {navItem("about", "About")}
-            {navItem("project", "Project")}
-            {navItem("database", "Database")}
-            {navItem("gallery", "Gallery")}
-            {navItem("contact", "Contact")}
-          </div>
-        )}
-      </nav>
+  {/* MOBILE MENU */}
+  {menuOpen && (
+    <div className="md:hidden bg-white border-t border-green-100 shadow-lg px-6 py-4 flex flex-col gap-4 text-[15px] font-semibold">
+      {navItem("home", "Home")}
+      {navItem("about", "About")}
+      {navItem("project", "Project")}
+      {navItem("database", "Database")}
+      {navItem("conservation", "Conservation")}
+      {navItem("dissemination", "Dissemination")}
+      {navItem("gallery", "Gallery")}
+      {navItem("contact", "Contact")}
+    </div>
+  )}
+</nav>
 
       {/* ── HERO ─────────────────────────────────────────────────────────────── */}
       <section
@@ -779,7 +755,7 @@ export default function Home() {
                 strokeWidth={2}
                 viewBox="0 0 24 24"
               >
-                <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+                <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7" />
               </svg>
             </button>
             <p className="mt-3 text-xs text-gray-500">
@@ -790,43 +766,280 @@ export default function Home() {
         </div>
       </section>
 
-      {/* ── GALLERY ──────────────────────────────────────────────────────────── */}
-      <section id="gallery" className="py-20 px-6 md:px-16 bg-white">
-        <div className="max-w-7xl mx-auto">
+      {/* ── CONSERVATION STRATEGIES ──────────────────────────────────────────── */}
+      <section id="conservation" className="py-20 sm:py-28 px-5 sm:px-8 lg:px-16 bg-green-50">
+        <div className="max-w-6xl mx-auto">
 
-          <div className="text-center mb-12">
-            <h2 className="text-4xl font-bold text-green-900">Gallery</h2>
-            <div className="w-24 h-1 bg-yellow-500 mx-auto mt-4 rounded-full" />
+          <div className="text-center mb-14">
+            <h2 className="text-3xl sm:text-4xl font-extrabold text-green-900">
+              Conservation Strategies
+            </h2>
+            <div className="w-20 h-1 bg-yellow-500 mx-auto mt-4 rounded-full" />
+            <p className="mt-4 text-sm md:text-base text-gray-600 max-w-2xl mx-auto">
+              Safeguarding indigenous knowledge through ethical frameworks, IP protection, and
+              responsible digital preservation.
+            </p>
           </div>
 
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
-            {(galleryImages.length ? galleryImages.slice(0, 24) : ["/hero-plant.png"]).map(
-              (src, idx) => (
+          {/* IP & Access Protection */}
+          <div className="mb-10">
+            <h3 className="text-xl font-bold text-green-800 mb-5 flex items-center gap-3">
+              <span className="inline-flex items-center justify-center w-9 h-9 rounded-full bg-green-900 text-white text-sm font-bold shrink-0">1</span>
+              Intellectual Property &amp; Access Protection
+            </h3>
+            <div className="grid sm:grid-cols-2 gap-5">
+              {[
+                {
+                  icon: "🔒",
+                  title: "Built-in IP Protection Protocols",
+                  desc: "Integration of built-in intellectual property (IP) protection protocols within the digital repository to safeguard indigenous knowledge.",
+                },
+                {
+                  icon: "🔐",
+                  title: "Controlled Access &amp; Consent-based Sharing",
+                  desc: "Implementation of controlled access and consent-based data sharing mechanisms to prevent unauthorized use or exploitation.",
+                },
+                {
+                  icon: "🏷️",
+                  title: "Proper Attribution",
+                  desc: "Ensuring proper attribution and recognition of traditional knowledge holders and communities.",
+                },
+                {
+                  icon: "⚖️",
+                  title: "Ethical Documentation &amp; Utilization",
+                  desc: "Promoting ethical documentation, preservation, and responsible utilization of indigenous knowledge through the repository.",
+                },
+              ].map((card) => (
                 <div
-                  key={src + idx}
-                  className="rounded-2xl overflow-hidden border border-green-100 shadow-sm hover:shadow-md transition-shadow"
+                  key={card.title}
+                  className="bg-white rounded-2xl p-6 border border-green-200 shadow-md hover:shadow-lg transition-shadow flex gap-4"
                 >
-                  <Image
-                    src={src}
-                    alt="Gallery image"
-                    width={300}
-                    height={200}
-                    className="w-full h-40 md:h-44 lg:h-48 object-cover"
-                    loading="lazy"
-                    quality={60}
-                    placeholder="blur"
-                    blurDataURL="/hero-plant.png"
-                    onError={(e: any) => {
-                      e.currentTarget.src = "/hero-plant.png";
-                    }}
-                  />
+                  <span className="text-2xl shrink-0 mt-0.5">{card.icon}</span>
+                  <div>
+                    <p
+                      className="font-bold text-green-900 mb-1 text-[15px]"
+                      dangerouslySetInnerHTML={{ __html: card.title }}
+                    />
+                    <p className="text-gray-600 text-sm leading-relaxed">{card.desc}</p>
+                  </div>
                 </div>
-              )
-            )}
+              ))}
+            </div>
+          </div>
+
+          {/* Knowledge Platforms & Community Networks */}
+          <div>
+            <h3 className="text-xl font-bold text-green-800 mb-5 flex items-center gap-3">
+              <span className="inline-flex items-center justify-center w-9 h-9 rounded-full bg-green-900 text-white text-sm font-bold shrink-0">2</span>
+              Knowledge Platforms &amp; Community Networks
+            </h3>
+            <div className="grid sm:grid-cols-2 gap-5">
+              {[
+                {
+                  icon: "💻",
+                  title: "Digital Knowledge Platforms",
+                  desc: "Integration of documented information into a structured digital repository to facilitate knowledge sharing among researchers, policymakers, and healthcare practitioners.",
+                },
+                {
+                  icon: "🤝",
+                  title: "Local Markets &amp; Community Networks",
+                  desc: "Interaction with local markets, self-help groups, and community organizations to understand the collection, trade, and utilization patterns of ethnomedicinal plants.",
+                },
+              ].map((card) => (
+                <div
+                  key={card.title}
+                  className="bg-white rounded-2xl p-6 border border-green-200 shadow-md hover:shadow-lg transition-shadow flex gap-4"
+                >
+                  <span className="text-2xl shrink-0 mt-0.5">{card.icon}</span>
+                  <div>
+                    <p
+                      className="font-bold text-green-900 mb-1 text-[15px]"
+                      dangerouslySetInnerHTML={{ __html: card.title }}
+                    />
+                    <p className="text-gray-600 text-sm leading-relaxed">{card.desc}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Copyright Notice */}
+          <div className="mt-12 bg-green-900 text-green-100 rounded-2xl p-6 md:p-8 border border-green-700 text-sm leading-relaxed space-y-3">
+            <p className="font-bold text-white text-base">
+              © {new Date().getFullYear()} All Rights Reserved — Trident Academy of Creative Technology, BBSR &amp; IKS Division, Govt. of India
+            </p>
+            <p>
+              The contents of this digital herbarium website cannot be reproduced partially or
+              fully, without due permission from the Chief Mentor, Trident Academy of Creative
+              Technology, BBSR and/or the IKS Division, Ministry of Education, Govt. of India.
+              If referred to as a part of another publication, both the sources should be
+              properly acknowledged. No part of this web-portal can be copied or reproduced in
+              any available format.
+            </p>
+            <p className="text-green-300 text-xs">
+              The Copyright Act 1957 and Copyright (Amendment) Act, 2012, Govt. of India will
+              be applicable for any dispute. &nbsp;|&nbsp; Designed &amp; Developed by Trident
+              Academy of Creative Technology, BBSR
+            </p>
           </div>
 
         </div>
       </section>
+
+      {/* ── KNOWLEDGE DISSEMINATION / OUTPUT ─────────────────────────────────── */}
+      <section id="dissemination" className="py-20 sm:py-28 px-5 sm:px-8 lg:px-16 bg-[#f8f6f1]">
+        <div className="max-w-6xl mx-auto">
+
+          <div className="text-center mb-14">
+            <h2 className="text-3xl sm:text-4xl font-extrabold text-green-900">
+              Knowledge Dissemination / Output
+            </h2>
+            <div className="w-20 h-1 bg-yellow-500 mx-auto mt-4 rounded-full" />
+          </div>
+
+          {/* Main text */}
+          <div className="bg-white rounded-3xl shadow-xl border border-green-100 p-8 md:p-12 mb-10">
+            <p className="text-gray-700 leading-relaxed text-lg text-justify">
+              The ethnobiological knowledge of tribal communities in Odisha embodies a profound
+              understanding of nature's pharmacopoeia, reflecting centuries of experiential wisdom
+              rooted in the Indian Knowledge System (IKS). This study explores the indigenous
+              medicinal plant use among major tribal groups of Odisha—such as the Kondh, Santal,
+              Saora, and Juang—highlighting their traditional health practices, cultural beliefs,
+              and ecological stewardship. These communities possess intricate knowledge of plant
+              taxonomy, habitat ecology, and therapeutic formulations, passed orally through
+              generations.
+            </p>
+            <p className="text-gray-700 leading-relaxed text-lg text-justify mt-5">
+              Medicinal flora such as <em>Rauvolfia serpentina</em>, <em>Terminalia chebula</em>,{" "}
+              <em>Withania somnifera</em>, and <em>Curcuma longa</em> are extensively used to treat
+              ailments ranging from fever, wounds, and digestive disorders to chronic illnesses.
+              The IKS framework provides a holistic perspective that integrates spiritual,
+              environmental, and health dimensions, emphasizing balance and sustainability.
+            </p>
+            <p className="text-gray-700 leading-relaxed text-lg text-justify mt-5">
+              Documentation and validation of this ethnobiological wisdom are vital for developing
+              bio-conservation strategies and novel drug discovery. Moreover, integrating
+              traditional practices with contemporary pharmacological research can bridge knowledge
+              systems and foster equitable benefit-sharing with tribal custodians. This will ensure
+              the preservation of the indigenous intellectual heritage for the coming generations.
+              The enhancement of the IKS in the empirical knowledge systems will make it more
+              relevant to the present-day challenges faced by society.
+            </p>
+          </div>
+
+          {/* Highlighted tribal groups */}
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-10">
+            {["Kondh", "Santal", "Saora", "Juang"].map((tribe) => (
+              <div
+                key={tribe}
+                className="bg-green-900 text-white rounded-2xl p-5 text-center shadow-md hover:bg-green-700 transition-colors"
+              >
+                <p className="text-2xl mb-2">🏕️</p>
+                <p className="font-bold text-base">{tribe}</p>
+                <p className="text-green-300 text-xs mt-1">Tribal Community</p>
+              </div>
+            ))}
+          </div>
+
+          {/* Key plants */}
+          <div className="mb-10">
+            <h3 className="text-xl font-bold text-green-800 mb-5 text-center">Key Documented Medicinal Plants</h3>
+            <div className="grid sm:grid-cols-2 md:grid-cols-4 gap-4">
+              {[
+                { name: "Rauvolfia serpentina", use: "Hypertension, snake bite" },
+                { name: "Terminalia chebula", use: "Digestive disorders, immunity" },
+                { name: "Withania somnifera", use: "Stress, chronic illness" },
+                { name: "Curcuma longa", use: "Wounds, inflammation, fever" },
+              ].map((plant) => (
+                <div
+                  key={plant.name}
+                  className="bg-white rounded-2xl p-5 border border-green-200 shadow-md hover:shadow-lg transition-shadow"
+                >
+                  <p className="font-bold italic text-green-900 text-sm mb-1">{plant.name}</p>
+                  <p className="text-gray-500 text-xs">{plant.use}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Poster & Glossary links */}
+          <div className="grid sm:grid-cols-2 gap-5">
+            <div className="bg-white rounded-2xl border border-green-200 shadow-md p-6 flex flex-col gap-3">
+              <div className="flex items-center gap-3 mb-1">
+                <span className="text-2xl">🖼️</span>
+                <h4 className="font-bold text-green-900 text-base">Research Poster</h4>
+              </div>
+              <p className="text-gray-500 text-sm">
+                View the official research poster summarising the project findings and methodology.
+              </p>
+              {/* Replace href below with your actual poster URL */}
+              <a
+                href="/poster.pdf"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-2 mt-auto px-5 py-2.5 bg-green-900 text-white rounded-xl hover:bg-green-700 active:scale-95 transition-all text-sm font-semibold w-fit"
+              >
+                View Poster
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                </svg>
+              </a>
+            </div>
+
+            <div className="bg-white rounded-2xl border border-yellow-200 shadow-md p-6 flex flex-col gap-3">
+              <div className="flex items-center gap-3 mb-1">
+                <span className="text-2xl">📖</span>
+                <h4 className="font-bold text-green-900 text-base">Glossary</h4>
+              </div>
+              <p className="text-gray-500 text-sm">
+                A comprehensive glossary of ethnobotanical and medicinal terms used in this
+                repository. <span className="italic text-yellow-700 font-medium">(Coming soon — glossary will be added here.)</span>
+              </p>
+              <span className="inline-flex items-center gap-2 mt-auto px-5 py-2.5 bg-yellow-100 text-yellow-800 rounded-xl text-sm font-semibold w-fit border border-yellow-200 cursor-default">
+                📋 Glossary — Coming Soon
+              </span>
+            </div>
+          </div>
+
+        </div>
+      </section>
+
+    {/* ── GALLERY ──────────────────────────────────────────────────────────── */}
+<section id="gallery" className="py-20 px-4 md:px-10 bg-white">
+  <div className="max-w-7xl mx-auto">
+
+    <div className="text-center mb-12">
+      <h2 className="text-4xl font-bold text-green-900">Gallery</h2>
+      <div className="w-24 h-1 bg-yellow-500 mx-auto mt-4 rounded-full" />
+    </div>
+
+    <div
+      className="grid gap-4"
+      style={{ gridTemplateColumns: "repeat(auto-fill, minmax(180px, 1fr))" }}
+    >
+      {(galleryImages.length ? galleryImages : ["/hero-plant.png"]).map(
+        (src, idx) => (
+          <div
+            key={idx}
+            className="rounded-2xl overflow-hidden border border-green-100 shadow-sm hover:shadow-md transition-shadow"
+          >
+            {/* ✅ Plain <img> avoids Next.js Image encoding issues with special filenames */}
+            <img
+              src={src}
+              alt={`Gallery image ${idx + 1}`}
+              className="w-full h-40 md:h-44 object-cover"
+              loading={idx < 6 ? "eager" : "lazy"}
+              onError={(e: any) => {
+                e.currentTarget.src = "/hero-plant.png";
+              }}
+            />
+          </div>
+        )
+      )}
+    </div>
+
+  </div>
+</section>
 
       {/* ── CONTACT ──────────────────────────────────────────────────────────── */}
       <section id="contact" className="py-24 px-6 md:px-16 bg-green-50">
@@ -968,10 +1181,14 @@ export default function Home() {
       </section>
 
       {/* ── FOOTER ───────────────────────────────────────────────────────────── */}
-      <footer className="bg-green-950 text-gray-400 py-10 text-center text-sm">
+      <footer className="bg-green-950 text-gray-400 py-10 text-center text-sm space-y-2 px-4">
         <p>
           &copy; {new Date().getFullYear()} Trident Academy of Creative Technology, BBSR
           &amp; IKS Division, Govt. of India. All rights reserved.
+        </p>
+        
+        <p className="text-gray-600 text-xs">
+          Designed &amp; Developed by Trident Academy of Creative Technology, BBSR
         </p>
       </footer>
 
