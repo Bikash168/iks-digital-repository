@@ -378,37 +378,37 @@ export default function Home() {
 
       {/* ── NAVBAR ───────────────────────────────────────────────────────────── */}
 <nav className="fixed top-0 w-full bg-white shadow-md z-50">
-  <div className="max-w-7xl mx-auto flex items-center justify-between px-4 md:px-8 py-2 md:py-3">
+  <div className="max-w-screen-xl mx-auto flex items-center justify-between px-6 md:px-10 py-2 md:py-3">
 
     {/* LEFT SECTION */}
-    <div className="flex items-center gap-2 md:gap-4 pr-4 md:pr-6 border-r border-green-200">
+    <div className="flex items-center gap-2 md:gap-3 pr-4 md:pr-6 border-r border-green-200 shrink-0">
 
-      {/* Logos — reduced sizes */}
-      <Image src="/logo1.png" alt="TACT Logo" width={48} height={48} className="w-10 h-10 md:w-12 md:h-12 object-contain" />
-<Image src="/logo2.png" alt="IKS Logo"  width={48} height={48} className="w-10 h-10 md:w-12 md:h-12 object-contain" />
-<Image src="/logo3.svg" alt="Govt Logo" width={48} height={48} className="w-10 h-10 md:w-12 md:h-12 object-contain" />
+      {/* Logos */}
+      <Image src="/logo1.png" alt="TACT Logo" width={56} height={56} className="w-10 h-10 md:w-14 md:h-14 object-contain" />
+      <Image src="/logo2.png" alt="IKS Logo"  width={56} height={56} className="w-10 h-10 md:w-14 md:h-14 object-contain" />
+      <Image src="/logo3.svg" alt="Govt Logo" width={56} height={56} className="w-10 h-10 md:w-14 md:h-14 object-contain" />
 
-      {/* Divider */}
-      <div className="hidden md:block w-px h-8 bg-green-200 mx-1" />
+      {/* Vertical divider */}
+      <div className="hidden md:block w-px h-10 bg-green-200 mx-1" />
 
-      {/* Title — single line */}
-      <div className="hidden md:flex flex-col justify-center">
-        <span className="text-sm lg:text-base font-semibold text-green-900 whitespace-nowrap leading-tight">
+      {/* Title */}
+      <div className="hidden lg:flex flex-col justify-center">
+        <span className="text-[15px] font-bold text-green-900 whitespace-nowrap leading-tight">
           IKS Digital Repository
         </span>
-        <span className="text-[10px] lg:text-xs text-green-600 whitespace-nowrap">
+        <span className="text-[11px] text-green-600 whitespace-nowrap">
           Ethno-medicinal knowledge
         </span>
       </div>
     </div>
 
     {/* Mobile title */}
-    <div className="flex md:hidden flex-col justify-center px-2">
+    <div className="flex lg:hidden flex-col justify-center px-2">
       <span className="text-xs font-semibold text-green-900 leading-tight">IKS Digital Repository</span>
     </div>
 
     {/* DESKTOP MENU */}
-    <div className="hidden md:flex items-center gap-4 lg:gap-7 text-[13px] lg:text-[14px] font-semibold text-green-800">
+    <div className="hidden md:flex items-center gap-3 lg:gap-6 xl:gap-8 text-[13px] lg:text-[14px] font-semibold text-green-800 shrink-0">
       {navItem("home", "Home")}
       {navItem("about", "About")}
       {navItem("project", "Project")}
@@ -446,7 +446,6 @@ export default function Home() {
     </div>
   )}
 </nav>
-
       {/* ── HERO ─────────────────────────────────────────────────────────────── */}
       <section
         id="home"
