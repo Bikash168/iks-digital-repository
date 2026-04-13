@@ -378,37 +378,45 @@ export default function Home() {
 
       {/* ── NAVBAR ───────────────────────────────────────────────────────────── */}
 <nav className="fixed top-0 w-full bg-white shadow-md z-50">
-  <div className="max-w-screen-xl mx-auto flex items-center justify-between px-6 md:px-10 py-2 md:py-3">
+  <div className="max-w-screen-xl mx-auto flex items-center px-4 md:px-10 py-3 md:py-5 gap-4 md:gap-6">
 
     {/* LEFT SECTION */}
-    <div className="flex items-center gap-2 md:gap-3 pr-4 md:pr-6 border-r border-green-200 shrink-0">
+    <div className="flex items-center gap-2 md:gap-4 pr-4 md:pr-10 border-r-2 border-green-200 shrink-0">
 
       {/* Logos */}
-      <Image src="/logo1.png" alt="TACT Logo" width={56} height={56} className="w-10 h-10 md:w-14 md:h-14 object-contain" />
-      <Image src="/logo2.png" alt="IKS Logo"  width={56} height={56} className="w-10 h-10 md:w-14 md:h-14 object-contain" />
-      <Image src="/logo3.svg" alt="Govt Logo" width={56} height={56} className="w-10 h-10 md:w-14 md:h-14 object-contain" />
+      <Image src="/logo1.png" alt="TACT Logo" width={72} height={72} className="w-9 h-9 md:w-[72px] md:h-[72px] object-contain" />
+      <Image src="/logo2.png" alt="IKS Logo"  width={72} height={72} className="w-9 h-9 md:w-[72px] md:h-[72px] object-contain" />
+      <Image src="/logo3.svg" alt="Govt Logo" width={72} height={72} className="w-9 h-9 md:w-[72px] md:h-[72px] object-contain" />
 
-      {/* Vertical divider */}
-      <div className="hidden md:block w-px h-10 bg-green-200 mx-1" />
+      {/* Vertical divider — desktop only */}
+      <div className="hidden md:block w-px h-14 bg-green-200 mx-3" />
 
-      {/* Title */}
+      {/* Title — desktop only */}
       <div className="hidden lg:flex flex-col justify-center">
-        <span className="text-[15px] font-bold text-green-900 whitespace-nowrap leading-tight">
+        <span className="text-[16px] font-bold text-green-900 whitespace-nowrap leading-tight">
           IKS Digital Repository
         </span>
-        <span className="text-[11px] text-green-600 whitespace-nowrap">
+        <span className="text-[12px] text-green-600 whitespace-nowrap">
           Ethno-medicinal knowledge
         </span>
       </div>
     </div>
 
-    {/* Mobile title */}
-    <div className="flex lg:hidden flex-col justify-center px-2">
-      <span className="text-xs font-semibold text-green-900 leading-tight">IKS Digital Repository</span>
+    {/* MOBILE TITLE — shown between logos and hamburger on small screens */}
+    <div className="flex flex-col justify-center flex-1 md:hidden">
+      <span className="text-[13px] font-bold text-green-900 leading-tight">
+        IKS Digital Repository
+      </span>
+      <span className="text-[10px] text-green-600">
+        Ethno-medicinal knowledge
+      </span>
     </div>
 
+    {/* SPACER — desktop only */}
+    <div className="hidden md:flex flex-1" />
+
     {/* DESKTOP MENU */}
-    <div className="hidden md:flex items-center gap-3 lg:gap-6 xl:gap-8 text-[13px] lg:text-[14px] font-semibold text-green-800 shrink-0">
+    <div className="hidden md:flex items-center gap-3 lg:gap-5 xl:gap-7 text-[13px] lg:text-[14px] font-semibold text-green-800 shrink-0">
       {navItem("home", "Home")}
       {navItem("about", "About")}
       {navItem("project", "Project")}
@@ -421,7 +429,7 @@ export default function Home() {
 
     {/* MOBILE HAMBURGER */}
     <button
-      className="md:hidden flex flex-col items-center justify-center gap-1.5 p-2 rounded-xl border border-green-200 shadow-sm"
+      className="md:hidden flex flex-col items-center justify-center gap-1.5 p-2 rounded-xl border border-green-200 shadow-sm shrink-0"
       onClick={() => setMenuOpen((prev) => !prev)}
       aria-label="Toggle menu"
     >
