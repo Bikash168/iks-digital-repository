@@ -18,7 +18,16 @@ type Plant = {
 // ─── Constants ────────────────────────────────────────────────────────────────
 
 const NAVBAR_HEIGHT = 130;
-const NAV_SECTIONS = ["home", "about", "project", "database", "conservation", "dissemination", "gallery", "contact"] as const;
+const NAV_SECTIONS = [
+  "home",
+  "about",
+  "project",
+  "database",
+  "conservation",
+  "dissemination",
+  "gallery",
+  "contact",
+] as const;
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -89,7 +98,6 @@ function PlantImageCarousel({
   photo: string;
   plantName: string;
   className?: string;
-  [key: string]: any;
 }) {
   const candidates = getPlantImageCandidates(photo, plantName);
   const [index, setIndex] = useState(0);
@@ -154,18 +162,20 @@ function PlantImageCarousel({
 export default function Home() {
   const router = useRouter();
 
+  // ── State ──────────────────────────────────────────────────────────────────
   const [data, setData] = useState<Plant[]>([]);
   const [galleryImages, setGalleryImages] = useState<string[]>([]);
-  const [currentPage, setCurrentPage] = useState(1);
-  const rowsPerPage = 10;
-  const [selectedPlant, setSelectedPlant] = useState<Plant | null>(null);
-  const [sortBy, setSortBy] = useState<"name" | "family" | "voucher">("name");
-  const [sortOrder, setSortOrder] = useState<"asc" | "desc">("asc");
-  const [selectedFamily, setSelectedFamily] = useState<string>("all");
-  const [showAdvanced, setShowAdvanced] = useState(false);
-  const [search, setSearch] = useState("");
+  const [galleryVisible, setGalleryVisible] = useState(false);
   const [activeSection, setActiveSection] = useState<string>("home");
   const [menuOpen, setMenuOpen] = useState(false);
+  const [search, setSearch] = useState("");
+
+  // ── Derived values ─────────────────────────────────────────────────────────
+  const totalPlants = data.length;
+  const uniqueFamilies = Array.from(new Set(data.map((item) => item.family))).sort();
+  const uniqueFamiliesCount = uniqueFamilies.length;
+
+  // ── Effects ────────────────────────────────────────────────────────────────
 
   // Close mobile menu on resize
   useEffect(() => {
@@ -259,7 +269,22 @@ export default function Home() {
     return () => window.removeEventListener("scroll", handler);
   }, []);
 
-  // Smooth scroll nav click
+  // Lazy-load gallery when section enters viewport
+  useEffect(() => {
+    const section = document.getElementById("gallery");
+    if (!section) return;
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) setGalleryVisible(true);
+      },
+      { rootMargin: "200px" }
+    );
+    observer.observe(section);
+    return () => observer.disconnect();
+  }, []);
+
+  // ── Handlers ───────────────────────────────────────────────────────────────
+
   const handleNavClick = useCallback(
     (e: React.MouseEvent<HTMLAnchorElement>, id: string) => {
       e.preventDefault();
@@ -273,7 +298,8 @@ export default function Home() {
     []
   );
 
-  // Nav item renderer
+  // ── Helpers ────────────────────────────────────────────────────────────────
+
   const navItem = (id: string, label: string) => (
     <a
       key={id}
@@ -294,167 +320,115 @@ export default function Home() {
     </a>
   );
 
-  // Filtering & sorting
-  const filteredData = data.filter(
-    (item) =>
-      (selectedFamily === "all" ||
-        item.family.toLowerCase() === selectedFamily.toLowerCase()) &&
-      (item.plantName.toLowerCase().includes(search.toLowerCase()) ||
-        item.family.toLowerCase().includes(search.toLowerCase()) ||
-        item.vendorNo.toLowerCase().includes(search.toLowerCase()) ||
-        item.ethnobotanicalUse.toLowerCase().includes(search.toLowerCase()))
-  );
-
-  const sortedData = [...filteredData].sort((a, b) => {
-    let aValue: string, bValue: string;
-    switch (sortBy) {
-      case "name":
-        aValue = a.plantName.toLowerCase();
-        bValue = b.plantName.toLowerCase();
-        break;
-      case "family":
-        aValue = a.family.toLowerCase();
-        bValue = b.family.toLowerCase();
-        break;
-      case "voucher":
-        aValue = a.vendorNo.toLowerCase();
-        bValue = b.vendorNo.toLowerCase();
-        break;
-      default:
-        return 0;
-    }
-    return sortOrder === "asc"
-      ? aValue.localeCompare(bValue)
-      : bValue.localeCompare(aValue);
-  });
-
-  const totalPages = Math.ceil(sortedData.length / rowsPerPage);
-  const paginatedData = sortedData.slice(
-    (currentPage - 1) * rowsPerPage,
-    currentPage * rowsPerPage
-  );
-
-  const uniqueFamilies = Array.from(
-    new Set(data.map((item) => item.family))
-  ).sort();
-
-  // Statistics
-  const totalPlants = data.length;
-  const uniqueFamiliesCount = uniqueFamilies.length;
-  const filteredCount = sortedData.length;
-
-  // Export CSV
-  const exportToCSV = () => {
-    if (sortedData.length === 0) return;
-    const csvData = sortedData.map((item) => ({
-      "Voucher No.": item.vendorNo,
-      "Plant Name": item.plantName,
-      Family: item.family,
-      "Therapeutic Use": item.ethnobotanicalUse,
-    }));
-    const csvString = [
-      Object.keys(csvData[0]).join(","),
-      ...csvData.map((row) =>
-        Object.values(row)
-          .map((val) => `"${val}"`)
-          .join(",")
-      ),
-    ].join("\n");
-    const blob = new Blob([csvString], { type: "text/csv" });
-    const url = window.URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `ethno-medicinal-plants-${
-      new Date().toISOString().split("T")[0]
-    }.csv`;
-    a.click();
-    window.URL.revokeObjectURL(url);
-  };
+  // Preview data (first 5 rows, no extra filtering needed on home page)
+  const previewData = data.slice(0, 5);
 
   // ─── Render ────────────────────────────────────────────────────────────────
 
   return (
     <main className="font-serif bg-[#f8f6f1]">
 
-      {/* ── NAVBAR ───────────────────────────────────────────────────────────── */}
-<nav className="fixed top-0 w-full bg-white shadow-md z-50">
-  <div className="max-w-screen-xl mx-auto flex items-center px-4 md:px-10 py-3 md:py-5 gap-4 md:gap-6">
+      {/* ── NAVBAR ─────────────────────────────────────────────────────────── */}
+      <nav className="fixed top-0 w-full bg-white shadow-md z-50">
+        <div className="max-w-screen-xl mx-auto flex items-center px-4 md:px-10 py-3 md:py-5 gap-4 md:gap-6">
 
-    {/* LEFT SECTION */}
-    <div className="flex items-center gap-2 md:gap-4 pr-4 md:pr-10 border-r-2 border-green-200 shrink-0">
+          {/* Left section */}
+          <div className="flex items-center gap-2 md:gap-4 pr-4 md:pr-10 border-r-2 border-green-200 shrink-0">
+            <Image
+              src="/logo1.png"
+              alt="TACT Logo"
+              width={72}
+              height={72}
+              className="w-9 h-9 md:w-[72px] md:h-[72px] object-contain"
+            />
+            <Image
+              src="/logo2.png"
+              alt="IKS Logo"
+              width={72}
+              height={72}
+              className="w-9 h-9 md:w-[72px] md:h-[72px] object-contain"
+            />
+            <Image
+              src="/logo3.svg"
+              alt="Govt Logo"
+              width={72}
+              height={72}
+              className="w-9 h-9 md:w-[72px] md:h-[72px] object-contain"
+            />
+            <div className="hidden md:block w-px h-14 bg-green-200 mx-3" />
+            <div className="hidden lg:flex flex-col justify-center">
+              <span className="text-[16px] font-bold text-green-900 whitespace-nowrap leading-tight">
+                IKS Digital Repository
+              </span>
+              <span className="text-[12px] text-green-600 whitespace-nowrap">
+                Ethno-medicinal knowledge
+              </span>
+            </div>
+          </div>
 
-      {/* Logos */}
-      <Image src="/logo1.png" alt="TACT Logo" width={72} height={72} className="w-9 h-9 md:w-[72px] md:h-[72px] object-contain" />
-      <Image src="/logo2.png" alt="IKS Logo"  width={72} height={72} className="w-9 h-9 md:w-[72px] md:h-[72px] object-contain" />
-      <Image src="/logo3.svg" alt="Govt Logo" width={72} height={72} className="w-9 h-9 md:w-[72px] md:h-[72px] object-contain" />
+          {/* Mobile title */}
+          <div className="flex flex-col justify-center flex-1 md:hidden">
+            <span className="text-[13px] font-bold text-green-900 leading-tight">
+              IKS Digital Repository
+            </span>
+            <span className="text-[10px] text-green-600">Ethno-medicinal knowledge</span>
+          </div>
 
-      {/* Vertical divider — desktop only */}
-      <div className="hidden md:block w-px h-14 bg-green-200 mx-3" />
+          {/* Desktop spacer */}
+          <div className="hidden md:flex flex-1" />
 
-      {/* Title — desktop only */}
-      <div className="hidden lg:flex flex-col justify-center">
-        <span className="text-[16px] font-bold text-green-900 whitespace-nowrap leading-tight">
-          IKS Digital Repository
-        </span>
-        <span className="text-[12px] text-green-600 whitespace-nowrap">
-          Ethno-medicinal knowledge
-        </span>
-      </div>
-    </div>
+          {/* Desktop menu */}
+          <div className="hidden md:flex items-center gap-3 lg:gap-5 xl:gap-7 text-[13px] lg:text-[14px] font-semibold text-green-800 shrink-0">
+            {navItem("home", "Home")}
+            {navItem("about", "About")}
+            {navItem("project", "Project")}
+            {navItem("database", "Database")}
+            {navItem("conservation", "Conservation")}
+            {navItem("dissemination", "Dissemination")}
+            {navItem("gallery", "Gallery")}
+            {navItem("contact", "Contact")}
+          </div>
 
-    {/* MOBILE TITLE — shown between logos and hamburger on small screens */}
-    <div className="flex flex-col justify-center flex-1 md:hidden">
-      <span className="text-[13px] font-bold text-green-900 leading-tight">
-        IKS Digital Repository
-      </span>
-      <span className="text-[10px] text-green-600">
-        Ethno-medicinal knowledge
-      </span>
-    </div>
+          {/* Hamburger */}
+          <button
+            className="md:hidden flex flex-col items-center justify-center gap-1.5 p-2 rounded-xl border border-green-200 shadow-sm shrink-0"
+            onClick={() => setMenuOpen((prev) => !prev)}
+            aria-label="Toggle menu"
+          >
+            <span
+              className={`block w-6 h-0.5 bg-green-800 transition-all duration-300 origin-center ${
+                menuOpen ? "rotate-45 translate-y-2" : ""
+              }`}
+            />
+            <span
+              className={`block w-6 h-0.5 bg-green-800 transition-all duration-300 ${
+                menuOpen ? "opacity-0" : ""
+              }`}
+            />
+            <span
+              className={`block w-6 h-0.5 bg-green-800 transition-all duration-300 origin-center ${
+                menuOpen ? "-rotate-45 -translate-y-2" : ""
+              }`}
+            />
+          </button>
+        </div>
 
-    {/* SPACER — desktop only */}
-    <div className="hidden md:flex flex-1" />
+        {/* Mobile menu */}
+        {menuOpen && (
+          <div className="md:hidden bg-white border-t border-green-100 shadow-lg px-6 py-4 flex flex-col gap-4 text-[15px] font-semibold">
+            {navItem("home", "Home")}
+            {navItem("about", "About")}
+            {navItem("project", "Project")}
+            {navItem("database", "Database")}
+            {navItem("conservation", "Conservation")}
+            {navItem("dissemination", "Dissemination")}
+            {navItem("gallery", "Gallery")}
+            {navItem("contact", "Contact")}
+          </div>
+        )}
+      </nav>
 
-    {/* DESKTOP MENU */}
-    <div className="hidden md:flex items-center gap-3 lg:gap-5 xl:gap-7 text-[13px] lg:text-[14px] font-semibold text-green-800 shrink-0">
-      {navItem("home", "Home")}
-      {navItem("about", "About")}
-      {navItem("project", "Project")}
-      {navItem("database", "Database")}
-      {navItem("conservation", "Conservation")}
-      {navItem("dissemination", "Dissemination")}
-      {navItem("gallery", "Gallery")}
-      {navItem("contact", "Contact")}
-    </div>
-
-    {/* MOBILE HAMBURGER */}
-    <button
-      className="md:hidden flex flex-col items-center justify-center gap-1.5 p-2 rounded-xl border border-green-200 shadow-sm shrink-0"
-      onClick={() => setMenuOpen((prev) => !prev)}
-      aria-label="Toggle menu"
-    >
-      <span className={`block w-6 h-0.5 bg-green-800 transition-all duration-300 origin-center ${menuOpen ? "rotate-45 translate-y-2" : ""}`} />
-      <span className={`block w-6 h-0.5 bg-green-800 transition-all duration-300 ${menuOpen ? "opacity-0" : ""}`} />
-      <span className={`block w-6 h-0.5 bg-green-800 transition-all duration-300 origin-center ${menuOpen ? "-rotate-45 -translate-y-2" : ""}`} />
-    </button>
-
-  </div>
-
-  {/* MOBILE MENU */}
-  {menuOpen && (
-    <div className="md:hidden bg-white border-t border-green-100 shadow-lg px-6 py-4 flex flex-col gap-4 text-[15px] font-semibold">
-      {navItem("home", "Home")}
-      {navItem("about", "About")}
-      {navItem("project", "Project")}
-      {navItem("database", "Database")}
-      {navItem("conservation", "Conservation")}
-      {navItem("dissemination", "Dissemination")}
-      {navItem("gallery", "Gallery")}
-      {navItem("contact", "Contact")}
-    </div>
-  )}
-</nav>
-      {/* ── HERO ─────────────────────────────────────────────────────────────── */}
+      {/* ── HERO ───────────────────────────────────────────────────────────── */}
       <section
         id="home"
         className="relative flex items-center overflow-hidden text-white"
@@ -476,8 +450,6 @@ export default function Home() {
         />
 
         <div className="relative z-10 max-w-7xl mx-auto px-8 w-full flex flex-col md:flex-row items-center justify-between gap-12 py-16">
-
-          {/* Left — Text */}
           <div className="flex-1 text-left max-w-xl">
             <p className="text-yellow-300 uppercase tracking-[0.25em] text-xs font-semibold mb-4">
               In Collaboration with
@@ -492,7 +464,6 @@ export default function Home() {
             </p>
           </div>
 
-          {/* Right — Image card */}
           <div className="flex-1 flex justify-center md:justify-end">
             <div className="bg-white rounded-3xl shadow-2xl p-5 w-full max-w-lg">
               <Image
@@ -505,14 +476,12 @@ export default function Home() {
               />
             </div>
           </div>
-
         </div>
       </section>
 
-      {/* ── ABOUT ────────────────────────────────────────────────────────────── */}
+      {/* ── ABOUT ──────────────────────────────────────────────────────────── */}
       <section id="about" className="py-24 px-6 md:px-16 bg-[#f8f6f1]">
         <div className="max-w-7xl mx-auto">
-
           <div className="text-center mb-16">
             <h2 className="text-4xl md:text-5xl font-bold text-green-900">
               IKS digital repository
@@ -594,11 +563,10 @@ export default function Home() {
               </p>
             </div>
           </div>
-
         </div>
       </section>
 
-      {/* ── PROJECT ──────────────────────────────────────────────────────────── */}
+      {/* ── PROJECT ────────────────────────────────────────────────────────── */}
       <section id="project" className="py-20 sm:py-28 px-5 sm:px-8 lg:px-16 bg-green-50">
         <div className="max-w-4xl mx-auto">
           <div className="text-center mb-12">
@@ -648,10 +616,9 @@ export default function Home() {
         </div>
       </section>
 
-      {/* ── DATABASE TEASER ──────────────────────────────────────────────────── */}
+      {/* ── DATABASE TEASER ────────────────────────────────────────────────── */}
       <section id="database" className="py-16 md:py-20 bg-[#f8f6f1]">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 md:px-8">
-
           <div className="text-center mb-10">
             <h2 className="text-3xl md:text-4xl font-bold text-green-900">Database</h2>
             <div className="w-20 h-1 bg-yellow-500 mx-auto mt-4 rounded-full" />
@@ -697,7 +664,7 @@ export default function Home() {
                     </tr>
                   </thead>
                   <tbody>
-                    {data.slice(0, 5).map((item, i) => (
+                    {previewData.map((item, i) => (
                       <tr
                         key={item.vendorNo + i}
                         className={`border-b border-green-100 ${
@@ -748,11 +715,7 @@ export default function Home() {
                 strokeWidth={2}
                 viewBox="0 0 24 24"
               >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  d="M4 7h16M4 12h16M4 17h10"
-                />
+                <path strokeLinecap="round" strokeLinejoin="round" d="M4 7h16M4 12h16M4 17h10" />
               </svg>
               Open Full Repository
               <svg
@@ -769,14 +732,12 @@ export default function Home() {
               Search, filter, and explore all {totalPlants} plant records with full details
             </p>
           </div>
-
         </div>
       </section>
 
-      {/* ── CONSERVATION STRATEGIES ──────────────────────────────────────────── */}
+      {/* ── CONSERVATION STRATEGIES ────────────────────────────────────────── */}
       <section id="conservation" className="py-20 sm:py-28 px-5 sm:px-8 lg:px-16 bg-green-50">
         <div className="max-w-6xl mx-auto">
-
           <div className="text-center mb-14">
             <h2 className="text-3xl sm:text-4xl font-extrabold text-green-900">
               Conservation Strategies
@@ -791,7 +752,9 @@ export default function Home() {
           {/* IP & Access Protection */}
           <div className="mb-10">
             <h3 className="text-xl font-bold text-green-800 mb-5 flex items-center gap-3">
-              <span className="inline-flex items-center justify-center w-9 h-9 rounded-full bg-green-900 text-white text-sm font-bold shrink-0">1</span>
+              <span className="inline-flex items-center justify-center w-9 h-9 rounded-full bg-green-900 text-white text-sm font-bold shrink-0">
+                1
+              </span>
               Intellectual Property &amp; Access Protection
             </h3>
             <div className="grid sm:grid-cols-2 gap-5">
@@ -803,7 +766,7 @@ export default function Home() {
                 },
                 {
                   icon: "🔐",
-                  title: "Controlled Access &amp; Consent-based Sharing",
+                  title: "Controlled Access & Consent-based Sharing",
                   desc: "Implementation of controlled access and consent-based data sharing mechanisms to prevent unauthorized use or exploitation.",
                 },
                 {
@@ -813,7 +776,7 @@ export default function Home() {
                 },
                 {
                   icon: "⚖️",
-                  title: "Ethical Documentation &amp; Utilization",
+                  title: "Ethical Documentation & Utilization",
                   desc: "Promoting ethical documentation, preservation, and responsible utilization of indigenous knowledge through the repository.",
                 },
               ].map((card) => (
@@ -823,10 +786,7 @@ export default function Home() {
                 >
                   <span className="text-2xl shrink-0 mt-0.5">{card.icon}</span>
                   <div>
-                    <p
-                      className="font-bold text-green-900 mb-1 text-[15px]"
-                      dangerouslySetInnerHTML={{ __html: card.title }}
-                    />
+                    <p className="font-bold text-green-900 mb-1 text-[15px]">{card.title}</p>
                     <p className="text-gray-600 text-sm leading-relaxed">{card.desc}</p>
                   </div>
                 </div>
@@ -837,7 +797,9 @@ export default function Home() {
           {/* Knowledge Platforms & Community Networks */}
           <div>
             <h3 className="text-xl font-bold text-green-800 mb-5 flex items-center gap-3">
-              <span className="inline-flex items-center justify-center w-9 h-9 rounded-full bg-green-900 text-white text-sm font-bold shrink-0">2</span>
+              <span className="inline-flex items-center justify-center w-9 h-9 rounded-full bg-green-900 text-white text-sm font-bold shrink-0">
+                2
+              </span>
               Knowledge Platforms &amp; Community Networks
             </h3>
             <div className="grid sm:grid-cols-2 gap-5">
@@ -849,7 +811,7 @@ export default function Home() {
                 },
                 {
                   icon: "🤝",
-                  title: "Local Markets &amp; Community Networks",
+                  title: "Local Markets & Community Networks",
                   desc: "Interaction with local markets, self-help groups, and community organizations to understand the collection, trade, and utilization patterns of ethnomedicinal plants.",
                 },
               ].map((card) => (
@@ -859,10 +821,7 @@ export default function Home() {
                 >
                   <span className="text-2xl shrink-0 mt-0.5">{card.icon}</span>
                   <div>
-                    <p
-                      className="font-bold text-green-900 mb-1 text-[15px]"
-                      dangerouslySetInnerHTML={{ __html: card.title }}
-                    />
+                    <p className="font-bold text-green-900 mb-1 text-[15px]">{card.title}</p>
                     <p className="text-gray-600 text-sm leading-relaxed">{card.desc}</p>
                   </div>
                 </div>
@@ -873,30 +832,29 @@ export default function Home() {
           {/* Copyright Notice */}
           <div className="mt-12 bg-green-900 text-green-100 rounded-2xl p-6 md:p-8 border border-green-700 text-sm leading-relaxed space-y-3">
             <p className="font-bold text-white text-base">
-              © {new Date().getFullYear()} All Rights Reserved — Trident Academy of Creative Technology, BBSR &amp; IKS Division, Govt. of India
+              &copy; {new Date().getFullYear()} All Rights Reserved — Trident Academy of Creative
+              Technology, BBSR &amp; IKS Division, Govt. of India
             </p>
             <p>
               The contents of this digital herbarium website cannot be reproduced partially or
               fully, without due permission from the Chief Mentor, Trident Academy of Creative
               Technology, BBSR and/or the IKS Division, Ministry of Education, Govt. of India.
-              If referred to as a part of another publication, both the sources should be
-              properly acknowledged. No part of this web-portal can be copied or reproduced in
-              any available format.
+              If referred to as a part of another publication, both the sources should be properly
+              acknowledged. No part of this web-portal can be copied or reproduced in any
+              available format.
             </p>
             <p className="text-green-300 text-xs">
-              The Copyright Act 1957 and Copyright (Amendment) Act, 2012, Govt. of India will
-              be applicable for any dispute. &nbsp;|&nbsp; Designed &amp; Developed by Trident
+              The Copyright Act 1957 and Copyright (Amendment) Act, 2012, Govt. of India will be
+              applicable for any dispute. &nbsp;|&nbsp; Designed &amp; Developed by Trident
               Academy of Creative Technology, BBSR
             </p>
           </div>
-
         </div>
       </section>
 
-      {/* ── KNOWLEDGE DISSEMINATION / OUTPUT ─────────────────────────────────── */}
+      {/* ── KNOWLEDGE DISSEMINATION ────────────────────────────────────────── */}
       <section id="dissemination" className="py-20 sm:py-28 px-5 sm:px-8 lg:px-16 bg-[#f8f6f1]">
         <div className="max-w-6xl mx-auto">
-
           <div className="text-center mb-14">
             <h2 className="text-3xl sm:text-4xl font-extrabold text-green-900">
               Knowledge Dissemination / Output
@@ -904,7 +862,6 @@ export default function Home() {
             <div className="w-20 h-1 bg-yellow-500 mx-auto mt-4 rounded-full" />
           </div>
 
-          {/* Main text */}
           <div className="bg-white rounded-3xl shadow-xl border border-green-100 p-8 md:p-12 mb-10">
             <p className="text-gray-700 leading-relaxed text-lg text-justify">
               The ethnobiological knowledge of tribal communities in Odisha embodies a profound
@@ -917,11 +874,12 @@ export default function Home() {
               generations.
             </p>
             <p className="text-gray-700 leading-relaxed text-lg text-justify mt-5">
-              Medicinal flora such as <em>Rauvolfia serpentina</em>, <em>Terminalia chebula</em>,{" "}
-              <em>Withania somnifera</em>, and <em>Curcuma longa</em> are extensively used to treat
-              ailments ranging from fever, wounds, and digestive disorders to chronic illnesses.
-              The IKS framework provides a holistic perspective that integrates spiritual,
-              environmental, and health dimensions, emphasizing balance and sustainability.
+              Medicinal flora such as <em>Rauvolfia serpentina</em>,{" "}
+              <em>Terminalia chebula</em>, <em>Withania somnifera</em>, and{" "}
+              <em>Curcuma longa</em> are extensively used to treat ailments ranging from fever,
+              wounds, and digestive disorders to chronic illnesses. The IKS framework provides a
+              holistic perspective that integrates spiritual, environmental, and health dimensions,
+              emphasizing balance and sustainability.
             </p>
             <p className="text-gray-700 leading-relaxed text-lg text-justify mt-5">
               Documentation and validation of this ethnobiological wisdom are vital for developing
@@ -934,7 +892,7 @@ export default function Home() {
             </p>
           </div>
 
-          {/* Highlighted tribal groups */}
+          {/* Tribal groups */}
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-10">
             {["Kondh", "Santal", "Saora", "Juang"].map((tribe) => (
               <div
@@ -950,7 +908,9 @@ export default function Home() {
 
           {/* Key plants */}
           <div className="mb-10">
-            <h3 className="text-xl font-bold text-green-800 mb-5 text-center">Key Documented Medicinal Plants</h3>
+            <h3 className="text-xl font-bold text-green-800 mb-5 text-center">
+              Key Documented Medicinal Plants
+            </h3>
             <div className="grid sm:grid-cols-2 md:grid-cols-4 gap-4">
               {[
                 { name: "Rauvolfia serpentina", use: "Hypertension, snake bite" },
@@ -979,7 +939,6 @@ export default function Home() {
               <p className="text-gray-500 text-sm">
                 View the official research poster summarising the project findings and methodology.
               </p>
-              {/* Replace href below with your actual poster URL */}
               <a
                 href="/POSTER FINAL IKS.pdf"
                 target="_blank"
@@ -987,8 +946,18 @@ export default function Home() {
                 className="inline-flex items-center gap-2 mt-auto px-5 py-2.5 bg-green-900 text-white rounded-xl hover:bg-green-700 active:scale-95 transition-all text-sm font-semibold w-fit"
               >
                 View Poster
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                <svg
+                  className="w-4 h-4"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth={2}
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"
+                  />
                 </svg>
               </a>
             </div>
@@ -1008,55 +977,76 @@ export default function Home() {
                 rel="noopener noreferrer"
                 className="inline-flex items-center gap-2 mt-auto px-5 py-2.5 bg-green-900 text-white rounded-xl hover:bg-green-700 active:scale-95 transition-all text-sm font-semibold w-fit"
               >
-                View Poster
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                View Glossary
+                <svg
+                  className="w-4 h-4"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth={2}
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"
+                  />
                 </svg>
               </a>
             </div>
           </div>
-
         </div>
       </section>
 
-    {/* ── GALLERY ──────────────────────────────────────────────────────────── */}
-<section id="gallery" className="py-20 px-4 md:px-10 bg-white">
-  <div className="max-w-7xl mx-auto">
-
-    <div className="text-center mb-12">
-      <h2 className="text-4xl font-bold text-green-900">Gallery</h2>
-      <div className="w-24 h-1 bg-yellow-500 mx-auto mt-4 rounded-full" />
-    </div>
-
-    <div
-      className="grid gap-4"
-      style={{ gridTemplateColumns: "repeat(auto-fill, minmax(180px, 1fr))" }}
-    >
-      {(galleryImages.length ? galleryImages : ["/hero-plant.png"]).map(
-        (src, idx) => (
-          <div
-            key={idx}
-            className="rounded-2xl overflow-hidden border border-green-100 shadow-sm hover:shadow-md transition-shadow"
-          >
-            {/* ✅ Plain <img> avoids Next.js Image encoding issues with special filenames */}
-            <img
-              src={src}
-              alt={`Gallery image ${idx + 1}`}
-              className="w-full h-40 md:h-44 object-cover"
-              loading={idx < 6 ? "eager" : "lazy"}
-              onError={(e: any) => {
-                e.currentTarget.src = "/hero-plant.png";
-              }}
-            />
+      {/* ── GALLERY ────────────────────────────────────────────────────────── */}
+      <section id="gallery" className="py-20 px-4 md:px-10 bg-white">
+        <div className="max-w-7xl mx-auto">
+          <div className="text-center mb-12">
+            <h2 className="text-4xl font-bold text-green-900">Gallery</h2>
+            <div className="w-24 h-1 bg-yellow-500 mx-auto mt-4 rounded-full" />
           </div>
-        )
-      )}
-    </div>
 
-  </div>
-</section>
+          {!galleryVisible ? (
+            <div
+              className="grid gap-4"
+              style={{ gridTemplateColumns: "repeat(auto-fill, minmax(180px, 1fr))" }}
+            >
+              {Array.from({ length: 12 }).map((_, idx) => (
+                <div
+                  key={idx}
+                  className="rounded-2xl bg-green-50 border border-green-100 h-40 md:h-44 animate-pulse"
+                />
+              ))}
+            </div>
+          ) : (
+            <div
+              className="grid gap-4"
+              style={{ gridTemplateColumns: "repeat(auto-fill, minmax(180px, 1fr))" }}
+            >
+              {(galleryImages.length ? galleryImages : ["/hero-plant.png"]).map((src, idx) => (
+                <div
+                  key={idx}
+                  className="rounded-2xl overflow-hidden border border-green-100 shadow-sm hover:shadow-md transition-shadow bg-green-50"
+                >
+                  <img
+                    src={src}
+                    alt={`Gallery image ${idx + 1}`}
+                    className="w-full h-40 md:h-44 object-cover"
+                    loading={idx < 4 ? "eager" : "lazy"}
+                    decoding="async"
+                    width={300}
+                    height={176}
+                    onError={(e: React.SyntheticEvent<HTMLImageElement>) => {
+                      e.currentTarget.src = "/hero-plant.png";
+                    }}
+                  />
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      </section>
 
-      {/* ── CONTACT ──────────────────────────────────────────────────────────── */}
+      {/* ── CONTACT ────────────────────────────────────────────────────────── */}
       <section id="contact" className="py-24 px-6 md:px-16 bg-green-50">
         <div className="max-w-6xl mx-auto">
           <div className="text-center mb-12">
@@ -1065,7 +1055,6 @@ export default function Home() {
           </div>
           <div className="grid md:grid-cols-2 gap-6">
 
-            {/* Contact 1 */}
             <div className="bg-white shadow-xl rounded-3xl p-8 border border-green-200 flex flex-col justify-between">
               <div>
                 <span className="inline-block mb-3 px-3 py-1 bg-green-100 text-green-800 text-xs font-semibold rounded-full uppercase tracking-wide">
@@ -1090,7 +1079,6 @@ export default function Home() {
               </a>
             </div>
 
-            {/* Contact 2 */}
             <div className="bg-white shadow-xl rounded-3xl p-8 border border-green-200 flex flex-col justify-between">
               <div>
                 <span className="inline-block mb-3 px-3 py-1 bg-yellow-100 text-yellow-800 text-xs font-semibold rounded-full uppercase tracking-wide">
@@ -1117,16 +1105,12 @@ export default function Home() {
         </div>
       </section>
 
-      {/* ── ABOUT US + GET IN TOUCH ───────────────────────────────────────────── */}
+      {/* ── ABOUT US + GET IN TOUCH ──────────────────────────────────────────── */}
       <section className="relative bg-[#0f1123] text-gray-300 py-20 px-6 md:px-16 overflow-hidden">
-
-        {/* Decorative blobs */}
         <div className="absolute top-0 left-0 w-72 h-72 bg-green-900 opacity-20 rounded-full blur-3xl -translate-x-1/2 -translate-y-1/2 pointer-events-none" />
         <div className="absolute bottom-0 right-0 w-72 h-72 bg-green-800 opacity-20 rounded-full blur-3xl translate-x-1/2 translate-y-1/2 pointer-events-none" />
 
         <div className="relative max-w-6xl mx-auto grid md:grid-cols-2 gap-16 items-start">
-
-          {/* About Us */}
           <div className="space-y-5">
             <div>
               <h3 className="text-3xl font-extrabold text-white tracking-wide">
@@ -1135,11 +1119,11 @@ export default function Home() {
               <div className="mt-2 w-12 h-1 bg-green-500 rounded-full" />
             </div>
             <p className="text-gray-400 leading-relaxed text-[15px]">
-              Trident Academy of Creative Technology, a name that has become a brand in the
-              field of technical education, is today synonymous with excellence. Trident is
-              where Education meets Enthusiasm. Within just a few years of its establishment,
-              Trident group of institutions has built an image amongst the aspiring masses
-              which is worth the quality of education it imparts.
+              Trident Academy of Creative Technology, a name that has become a brand in the field
+              of technical education, is today synonymous with excellence. Trident is where
+              Education meets Enthusiasm. Within just a few years of its establishment, Trident
+              group of institutions has built an image amongst the aspiring masses which is worth
+              the quality of education it imparts.
             </p>
             <a
               href="https://tsbs.ac.in/"
@@ -1152,10 +1136,8 @@ export default function Home() {
             </a>
           </div>
 
-          {/* Vertical divider */}
           <div className="hidden md:block absolute left-1/2 top-0 bottom-0 w-px bg-gradient-to-b from-transparent via-green-800 to-transparent" />
 
-          {/* Get In Touch */}
           <div className="space-y-5 md:pl-8">
             <div>
               <h3 className="text-3xl font-extrabold text-white tracking-wide">
@@ -1191,17 +1173,15 @@ export default function Home() {
               </li>
             </ul>
           </div>
-
         </div>
       </section>
 
-      {/* ── FOOTER ───────────────────────────────────────────────────────────── */}
+      {/* ── FOOTER ─────────────────────────────────────────────────────────── */}
       <footer className="bg-green-950 text-gray-400 py-10 text-center text-sm space-y-2 px-4">
         <p>
-          &copy; {new Date().getFullYear()} Trident Academy of Creative Technology, BBSR
-          &amp; IKS Division, Govt. of India. All rights reserved.
+          &copy; {new Date().getFullYear()} Trident Academy of Creative Technology, BBSR &amp;
+          IKS Division, Govt. of India. All rights reserved.
         </p>
-        
         <p className="text-gray-600 text-xs">
           Designed &amp; Developed by Trident Academy of Creative Technology, BBSR
         </p>
