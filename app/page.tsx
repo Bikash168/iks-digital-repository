@@ -146,9 +146,8 @@ function PlantImageCarousel({
           {candidates.map((_, i) => (
             <span
               key={i}
-              className={`h-2 w-2 rounded-full ${
-                i === normalizedIndex ? "bg-white" : "bg-white/50"
-              }`}
+              className={`h-2 w-2 rounded-full ${i === normalizedIndex ? "bg-white" : "bg-white/50"
+                }`}
             />
           ))}
         </div>
@@ -305,17 +304,15 @@ export default function Home() {
       key={id}
       href={`#${id}`}
       onClick={(e) => handleNavClick(e, id)}
-      className={`relative pb-1 transition duration-300 ${
-        activeSection === id
+      className={`relative pb-1 transition duration-300 ${activeSection === id
           ? "text-green-600"
           : "text-green-800 hover:text-green-600"
-      }`}
+        }`}
     >
       {label}
       <span
-        className={`absolute left-0 -bottom-1 h-[2px] bg-green-600 transition-all duration-300 ${
-          activeSection === id ? "w-full" : "w-0"
-        }`}
+        className={`absolute left-0 -bottom-1 h-[2px] bg-green-600 transition-all duration-300 ${activeSection === id ? "w-full" : "w-0"
+          }`}
       />
     </a>
   );
@@ -396,19 +393,16 @@ export default function Home() {
             aria-label="Toggle menu"
           >
             <span
-              className={`block w-6 h-0.5 bg-green-800 transition-all duration-300 origin-center ${
-                menuOpen ? "rotate-45 translate-y-2" : ""
-              }`}
+              className={`block w-6 h-0.5 bg-green-800 transition-all duration-300 origin-center ${menuOpen ? "rotate-45 translate-y-2" : ""
+                }`}
             />
             <span
-              className={`block w-6 h-0.5 bg-green-800 transition-all duration-300 ${
-                menuOpen ? "opacity-0" : ""
-              }`}
+              className={`block w-6 h-0.5 bg-green-800 transition-all duration-300 ${menuOpen ? "opacity-0" : ""
+                }`}
             />
             <span
-              className={`block w-6 h-0.5 bg-green-800 transition-all duration-300 origin-center ${
-                menuOpen ? "-rotate-45 -translate-y-2" : ""
-              }`}
+              className={`block w-6 h-0.5 bg-green-800 transition-all duration-300 origin-center ${menuOpen ? "-rotate-45 -translate-y-2" : ""
+                }`}
             />
           </button>
         </div>
@@ -634,7 +628,7 @@ export default function Home() {
             {[
               { emoji: "🌿", value: totalPlants, label: "Total Plants" },
               { emoji: "🏠", value: uniqueFamiliesCount, label: "Families" },
-              { emoji: "💊", value: 187, label: "Therapeutic Uses" },
+              { emoji: "💊", value: 241, label: "Therapeutic Uses" },
               { emoji: "📍", value: "Eastern Odisha", label: "Region" },
             ].map(({ emoji, value, label }) => (
               <div
@@ -667,9 +661,8 @@ export default function Home() {
                     {previewData.map((item, i) => (
                       <tr
                         key={item.vendorNo + i}
-                        className={`border-b border-green-100 ${
-                          i % 2 === 0 ? "bg-white" : "bg-[#fafdf8]"
-                        }`}
+                        className={`border-b border-green-100 ${i % 2 === 0 ? "bg-white" : "bg-[#fafdf8]"
+                          }`}
                       >
                         <td className="px-5 py-3 font-mono text-xs text-green-800 font-semibold">
                           {item.vendorNo}
