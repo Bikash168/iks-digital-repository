@@ -305,8 +305,8 @@ export default function Home() {
       href={`#${id}`}
       onClick={(e) => handleNavClick(e, id)}
       className={`relative pb-1 transition duration-300 ${activeSection === id
-          ? "text-green-600"
-          : "text-green-800 hover:text-green-600"
+        ? "text-green-600"
+        : "text-green-800 hover:text-green-600"
         }`}
     >
       {label}
@@ -628,7 +628,7 @@ export default function Home() {
             {[
               { emoji: "🌿", value: totalPlants, label: "Total Plants" },
               { emoji: "🏠", value: uniqueFamiliesCount, label: "Families" },
-              { emoji: "💊", value: 241, label: "Therapeutic Uses" },
+              { emoji: "💊", value: 295, label: "Therapeutic Uses" },
               { emoji: "📍", value: "Eastern Odisha", label: "Region" },
             ].map(({ emoji, value, label }) => (
               <div
